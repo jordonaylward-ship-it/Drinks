@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Drink Limit">
+<meta name="theme-color" content="#F5F7FB">
+<title>Drink Limit</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#F5F7FB; --card:#FFFFFF; --text:#1C1C1E; --muted:#6B7280; --line:#E8EAF1; --tab:rgba(255,255,255,.85);
+    --sky:#DCEBFF; --sky-ink:#2A62E8;
+    --mint:#D7F3E6; --mint-ink:#12714A;
+    --peach:#FFE4D3; --peach-ink:#B9521A;
+    --rose:#FFDBE4; --rose-ink:#BE2A54;
+    --lilac:#E7E0FF; --lilac-ink:#5A3FD1;
+    --shadow:0 1px 2px rgba(20,24,40,.05);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    color-scheme:light dark;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E0F13; --card:#1A1B21; --text:#F2F2F7; --muted:#9A9CA6; --line:#2A2B33; --tab:rgba(26,27,33,.85);
+      --sky:#1C2A47; --sky-ink:#8FB4FF;
+      --mint:#14301F; --mint-ink:#6FD9A6;
+      --peach:#3A2416; --peach-ink:#FFB088;
+      --rose:#3A1A24; --rose-ink:#FF8FAD;
+      --lilac:#241E44; --lilac-ink:#BBA9FF;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E0F13; --card:#1A1B21; --text:#F2F2F7; --muted:#9A9CA6; --line:#2A2B33; --tab:rgba(26,27,33,.85);
+    --sky:#1C2A47; --sky-ink:#8FB4FF;
+    --mint:#14301F; --mint-ink:#6FD9A6;
+    --peach:#3A2416; --peach-ink:#FFB088;
+    --rose:#3A1A24; --rose-ink:#FF8FAD;
+    --lilac:#241E44; --lilac-ink:#BBA9FF;
+    --shadow:none;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px; line-height:1.35; -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));
+  }
+  .app{max-width:480px;margin:0 auto;padding:10px 16px 20px}
+  .top{display:flex;align-items:baseline;justify-content:space-between;padding:10px 4px 14px}
+  .brand{font-size:28px;font-weight:700;letter-spacing:-.5px}
+  .who{color:var(--muted);font-size:14px}
+
+  .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--muted)}
+  .card p{margin:0}
+  .card ul{margin:0;padding-left:18px}
+  .card li{margin:6px 0}
+
+  .hero{border-radius:22px;padding:22px 18px 18px;margin-bottom:12px;transition:background .25s}
+  .hero.mint{background:var(--mint);color:var(--mint-ink)}
+  .hero.sky{background:var(--sky);color:var(--sky-ink)}
+  .hero.peach{background:var(--peach);color:var(--peach-ink)}
+  .hero.rose{background:var(--rose);color:var(--rose-ink)}
+  .hero.lilac{background:var(--lilac);color:var(--lilac-ink)}
+  .hero .eyebrow{font-size:15px;font-weight:600;opacity:.85}
+  .hero .big{font-size:62px;font-weight:700;letter-spacing:-2px;line-height:1.05;font-variant-numeric:tabular-nums;margin:4px 0 6px}
+  .hero .big.text{font-size:44px;letter-spacing:-1px}
+  .hero .sub{font-size:15px;opacity:.92}
+  .hero .row{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,0,0,.08)}
+  .hero .stat{flex:1;min-width:0}
+  .hero .stat .k{font-size:12px;opacity:.75}
+  .hero .stat .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
+  .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 0;font:inherit;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .drink{border:0;background:var(--bg);border-radius:14px;padding:14px 12px;text-align:left;font:inherit;color:var(--text);display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:transform .08s}
+  .drink:active{transform:scale(.97)}
+  .drink .n{font-size:16px;font-weight:600}
+  .drink .s{font-size:13px;color:var(--muted)}
+  .drink.custom{background:var(--lilac);color:var(--lilac-ink)}
+  .drink.custom .s{color:inherit;opacity:.8}
+  .drink.water{background:var(--sky);color:var(--sky-ink)}
+  .drink.water .s{color:inherit;opacity:.8}
+
+  .inline{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+  .inline input{font:inherit;font-size:16px;border:0;background:var(--bg);border-radius:12px;padding:12px 14px;color:var(--text);width:100%}
+  .inline .pair{display:flex;gap:10px}
+  .inline .pair .btn{flex:1}
+
+  .log .item{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+  .log .item:first-child{border-top:0}
+  .log .t{color:var(--muted);font-size:14px;width:66px;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .log .nm{flex:1;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .log .sd{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+  .log .x{border:0;background:var(--bg);color:var(--muted);width:30px;height:30px;border-radius:50%;font-size:17px;line-height:1;cursor:pointer;flex-shrink:0}
+
+  .field{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+  .field.first{border-top:0;padding-top:4px}
+  .field label,.field .k{font-size:16px}
+  .field .v{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+  .field .v.strong{color:var(--text);font-weight:600}
+  .field input{font:inherit;font-size:16px;width:150px;text-align:right;border:0;background:var(--bg);border-radius:10px;padding:9px 12px;color:var(--text)}
+  .field .unit{display:flex;align-items:center;gap:8px;color:var(--muted)}
+  .field .unit input{width:90px}
+
+  .btn{border:0;border-radius:12px;padding:13px 16px;font:inherit;font-size:16px;font-weight:600;background:var(--text);color:var(--card);width:100%;cursor:pointer}
+  .btn.ghost{background:var(--bg);color:var(--text)}
+  .btn.danger{background:var(--rose);color:var(--rose-ink)}
+  .note{color:var(--muted);font-size:14px;margin:10px 0 0}
+  .empty{color:var(--muted);font-size:15px;padding:6px 0}
+
+  .tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--tab);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 8px calc(10px + env(safe-area-inset-bottom,0px))}
+  .tabbar .inner{display:flex;width:100%;max-width:480px}
+  .tabbar button{flex:1;border:0;background:transparent;font:inherit;font-size:11px;font-weight:500;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer}
+  .tabbar button.on{color:var(--sky-ink)}
+  .tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));background:var(--text);color:var(--card);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+  .toast.show{opacity:1}
+
+  button:focus-visible,input:focus-visible{outline:2px solid var(--sky-ink);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){.toast,.hero,.drink{transition:none}.drink:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">Drink Limit</div>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="tabbar" aria-label="Sections">
+  <div class="inner">
+    <button data-tab="track">
+      <svg viewBox="0 0 24 24"><path d="M5 4h14l-1.2 11.6A3 3 0 0 1 14.8 18H9.2a3 3 0 0 1-3-2.4L5 4z"/><path d="M12 18v3M8.5 21h7M6 9h12"/></svg>
+      Track
+    </button>
+    <button data-tab="drive">
+      <svg viewBox="0 0 24 24"><path d="M4 14l1.6-4.6A2 2 0 0 1 7.5 8h9a2 2 0 0 1 1.9 1.4L20 14"/><rect x="3" y="14" width="18" height="4.5" rx="1.6"/><circle cx="7.5" cy="19.5" r="1.2"/><circle cx="16.5" cy="19.5" r="1.2"/></svg>
+      Drive
+    </button>
+    <button data-tab="tomorrow">
+      <svg viewBox="0 0 24 24"><path d="M4 17h16"/><path d="M7.5 17a4.5 4.5 0 0 1 9 0"/><path d="M12 7v2M5.5 10l1.4 1.4M18.5 10l-1.4 1.4M3 14h2M19 14h2"/></svg>
+      Tomorrow
+    </button>
+    <button data-tab="settings">
+      <svg viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
+      Settings
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+var KEY = 'drinklimit.v1';
+var BETA = 0.015;
+var RDIST = { male: 0.68, female: 0.55 };
+var PRESETS = [
+  { name: 'Hard Solo', std: 1.3, note: '375ml can, 4.5%' },
+  { name: 'Vodka water', std: 1.0, note: '30ml nip' },
+  { name: 'Gin and dry', std: 1.0, note: '30ml nip' },
+  { name: 'Tequila shot', std: 1.0, note: '30ml' },
+  { name: 'Wet cat shot', std: 0.7, note: 'mixed shot, varies' },
+  { name: 'Double spirit', std: 2.0, note: '60ml or a free pour' },
+  { name: 'Cocktail', std: 1.5, note: 'club pour' },
+  { name: 'Beer can', std: 1.3, note: '375ml full strength' }
+];
+var GOALS = [
+  { v: 0.05, label: 'Fresh' },
+  { v: 0.08, label: 'Bit rough' },
+  { v: null, label: 'No cap' }
+];
+var TIERS = [
+  { label: 'Fresh', color: 'mint', text: 'You should wake up fine.' },
+  { label: 'Bit rough', color: 'sky', text: 'A bit dusty tomorrow. Water and food fix most of it.' },
+  { label: 'Rough', color: 'peach', text: 'Tomorrow morning will hurt.' },
+  { label: 'Wrecked', color: 'rose', text: 'Write tomorrow off.' }
+];
+var OFFSETS = [
+  { m: 0, label: 'Now' },
+  { m: 15, label: '15m ago' },
+  { m: 30, label: '30m ago' },
+  { m: 60, label: '1h ago' }
+];
+
+var state = load();
+var tab = 'track';
+var offsetMin = 0;
+var customOpen = false;
+var resetArmed = 0;
+var toastTimer = null;
+
+function defaults(){
+  return { settings: { name: 'Jordy', weight: 71, sex: 'male', licence: 'open', goal: 0.05 }, drinks: [], water: [] };
+}
+function load(){
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var s = JSON.parse(raw);
+      var d = defaults();
+      d.settings = Object.assign(d.settings, s.settings || {});
+      d.drinks = Array.isArray(s.drinks) ? s.drinks : [];
+      d.water = Array.isArray(s.water) ? s.water : [];
+      return d;
+    }
+  } catch (e) {}
+  return defaults();
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function el(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function set(id, txt){ var n = el(id); if (n && n.textContent !== txt) n.textContent = txt; }
+
+function perDrink(){
+  var s = state.settings;
+  var r = RDIST[s.sex] || 0.68;
+  var w = Math.max(30, Number(s.weight) || 71) * 1000;
+  return (10 / (w * r)) * 100;
+}
+var ABS = 30 * 60000;
+function simulate(t){
+  var pd = perDrink();
+  var ds = state.drinks.filter(function(d){ return d.t <= t; }).slice().sort(function(a, b){ return a.t - b.t; });
+  if (!ds.length) return { bac: 0, peak: 0, last: null, pending: 0 };
+  var last = ds[ds.length - 1].t;
+  var stop = Math.min(t, last + ABS);
+  var step = 60000;
+  var bac = 0, peak = 0;
+  for (var tm = ds[0].t; tm < stop; tm += step) {
+    var dt = Math.min(step, stop - tm);
+    var add = 0;
+    for (var i = 0; i < ds.length; i++) {
+      var d = ds[i];
+      var ov = Math.min(tm + dt, d.t + ABS) - Math.max(tm, d.t);
+      if (ov > 0) add += pd * Number(d.std) * (ov / ABS);
+    }
+    bac = Math.max(0, bac - BETA * (dt / 3.6e6)) + add;
+    if (bac > peak) peak = bac;
+  }
+  if (t > stop) bac = Math.max(0, bac - BETA * ((t - stop) / 3.6e6));
+  var pending = 0;
+  for (var j = 0; j < ds.length; j++) {
+    var f = (t - ds[j].t) / ABS;
+    if (f < 1) pending += pd * Number(ds[j].std) * (1 - Math.max(0, f));
+  }
+  return { bac: bac, peak: peak, last: last, pending: pending };
+}
+function total(){ return state.drinks.reduce(function(a, d){ return a + Number(d.std); }, 0); }
+function hoursUntil(bac, target){ return bac > target ? (bac - target) / BETA : 0; }
+
+function driveInfo(now){
+  var sim = simulate(now);
+  var bac = sim.bac + sim.pending;
+  var zero = state.settings.licence !== 'open';
+  var status, color;
+  if (bac <= 0.0005) { status = 'Clear'; color = 'mint'; }
+  else if (zero) { status = 'No'; color = 'rose'; }
+  else if (bac >= 0.05) { status = 'No'; color = 'rose'; }
+  else if (bac >= 0.03) { status = 'Risky'; color = 'peach'; }
+  else { status = 'Under 0.05'; color = 'mint'; }
+  var hUnder = zero ? bac / BETA : hoursUntil(bac, 0.05);
+  var hZero = bac / BETA;
+  return { bac: bac, status: status, color: color, zero: zero, hUnder: hUnder, hZero: hZero,
+    underAt: new Date(now + hUnder * 3.6e6), zeroAt: new Date(now + hZero * 3.6e6) };
+}
+function nextDrink(now){
+  var g = state.settings.goal;
+  if (g === null || g === undefined) return null;
+  var sim0 = simulate(now);
+  var bac = sim0.bac + sim0.pending;
+  var pd = perDrink();
+  var target = g - pd;
+  if (target < 0) return { never: true };
+  if (bac <= target + 1e-9) return { ok: true, sec: 0 };
+  var h = (bac - target) / BETA;
+  return { ok: false, sec: h * 3600, at: new Date(now + h * 3.6e6) };
+}
+function tierIndex(peak, tot){
+  var i = peak < 0.05 ? 0 : peak < 0.08 ? 1 : peak < 0.11 ? 2 : 3;
+  if (tot >= 10 && i < 1) i = 1;
+  if (tot >= 14 && i < 2) i = 2;
+  return i;
+}
+
+function fmtBac(b){ return b.toFixed(3); }
+function fmtTime(d){
+  var h = d.getHours(), m = d.getMinutes();
+  var ap = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if (h === 0) h = 12;
+  return h + ':' + (m < 10 ? '0' : '') + m + ap;
+}
+function fmtWhen(d){
+  var now = new Date();
+  if (d.toDateString() === now.toDateString()) return fmtTime(d);
+  var tmr = new Date(now); tmr.setDate(now.getDate() + 1);
+  if (d.toDateString() === tmr.toDateString()) return fmtTime(d) + ' tomorrow';
+  return fmtTime(d) + ' ' + d.toLocaleDateString('en-AU', { weekday: 'short' });
+}
+function fmtDur(h){
+  var m = Math.round(h * 60);
+  if (m < 1) return 'now';
+  var hh = Math.floor(m / 60), mm = m % 60;
+  return hh ? hh + 'h ' + mm + 'm' : mm + 'm';
+}
+function fmtCountdown(sec){
+  sec = Math.max(0, Math.ceil(sec));
+  var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  function p(n){ return (n < 10 ? '0' : '') + n; }
+  return h ? h + ':' + p(m) + ':' + p(s) : p(m) + ':' + p(s);
+}
+function fmtGoal(g){ return g.toFixed(2); }
+function fmtStd(n){ return (Math.round(n * 10) / 10).toFixed(1); }
+
+function toast(msg){
+  var t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
+}
+
+function logDrink(name, std){
+  var t = Date.now() - offsetMin * 60000;
+  state.drinks.push({ id: t + Math.random().toString(36).slice(2, 7), t: t, name: name, std: Number(std) });
+  offsetMin = 0;
+  customOpen = false;
+  save();
+  render();
+  toast('Logged ' + name + ', ' + fmtStd(std) + ' std');
+}
+function removeDrink(id){
+  state.drinks = state.drinks.filter(function(d){ return d.id !== id; });
+  save();
+  render();
+}
+function logWater(){
+  state.water.push(Date.now());
+  save();
+  render();
+  toast('Water logged');
+}
+
+function heroRow(stats){
+  return '<div class="row">' + stats.map(function(s){
+    return '<div class="stat"><div class="k">' + s.k + '</div><div class="v" id="' + s.id + '"></div></div>';
+  }).join('') + '</div>';
+}
+
+function renderTrack(){
+  var h = '';
+  h += '<section class="hero mint" id="hero">' +
+    '<div class="eyebrow" id="heroEyebrow"></div>' +
+    '<div class="big" id="heroBig"></div>' +
+    '<div class="sub" id="heroSub"></div>' +
+    heroRow([{ k: 'Est. BAC', id: 'heroBac' }, { k: 'Today', id: 'heroTotal' }, { k: 'Driving', id: 'heroDrive' }]) +
+  '</section>';
+
+  h += '<section class="card"><h2>Log a drink</h2>';
+  h += '<div class="seg" id="offSeg">' + OFFSETS.map(function(o){
+    return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
+  }).join('') + '</div>';
+  h += '<div class="grid">' + PRESETS.map(function(p, i){
+    return '<button class="drink" data-i="' + i + '"><span class="n">' + esc(p.name) + '</span><span class="s">' + fmtStd(p.std) + ' std, ' + esc(p.note) + '</span></button>';
+  }).join('');
+  h += '<button class="drink custom" id="customBtn"><span class="n">Something else</span><span class="s">Enter the standard drinks</span></button>';
+  h += '<button class="drink water" id="waterBtn"><span class="n">Water</span><span class="s" id="waterCount"></span></button>';
+  h += '</div>';
+  if (customOpen) {
+    h += '<div class="inline">' +
+      '<input type="text" id="cName" placeholder="What is it" autocomplete="off">' +
+      '<input type="number" id="cStd" inputmode="decimal" step="0.1" min="0.1" placeholder="Standard drinks, it is printed on the can or bottle">' +
+      '<div class="pair"><button class="btn ghost" id="cCancel">Cancel</button><button class="btn" id="cAdd">Add it</button></div>' +
+    '</div>';
+  }
+  h += '<p class="note">Free pours at a mate\u2019s place are usually doubles. Log them as a double.</p>';
+  h += '</section>';
+
+  h += '<section class="card log"><h2 id="logHead">Today</h2>';
+  if (!state.drinks.length) {
+    h += '<div class="empty">Nothing logged yet. Tap a drink above when you have one.</div>';
+  } else {
+    var sorted = state.drinks.slice().sort(function(a, b){ return b.t - a.t; });
+    h += sorted.map(function(d){
+      return '<div class="item"><span class="t">' + fmtTime(new Date(d.t)) + '</span><span class="nm">' + esc(d.name) + '</span><span class="sd">' + fmtStd(d.std) + '</span><button class="x" data-rm="' + esc(d.id) + '" aria-label="Remove">\u00d7</button></div>';
+    }).join('');
+  }
+  h += '</section>';
+  return h;
+}
+
+function renderDrive(){
+  var zero = state.settings.licence !== 'open';
+  var h = '';
+  h += '<section class="hero mint" id="driveHero">' +
+    '<div class="eyebrow">Can you drive</div>' +
+    '<div class="big text" id="driveStatus"></div>' +
+    '<div class="sub" id="driveSub"></div>' +
+  '</section>';
+  h += '<section class="card"><h2>When you are clear</h2>';
+  if (!zero) h += '<div class="field first"><span class="k">Under 0.05</span><span class="v strong" id="driveUnder"></span></div>';
+  h += '<div class="field' + (zero ? ' first' : '') + '"><span class="k">Zero</span><span class="v strong" id="driveZero"></span></div>';
+  h += '<p class="note">Give it an extra hour on top of these. This is a maths estimate, not a breath test. Food, fitness and your liver all change it.</p>';
+  h += '</section>';
+  h += '<section class="card"><h2>Queensland rules</h2><ul>' +
+    '<li>Open licence must be under 0.05.</li>' +
+    '<li>Learner, P1, P2, probationary, restricted and interlock licences must be zero.</li>' +
+    '<li>Zero also applies driving a truck over 4.5 tonnes, a bus, a taxi or rideshare.</li>' +
+    '<li>You can be charged while in charge of a parked car, not just driving it.</li>' +
+    '<li>Plenty of people get done the morning after. Check this before you touch the keys.</li>' +
+  '</ul></section>';
+  return h;
+}
+
+function renderTomorrow(){
+  var g = state.settings.goal;
+  var h = '';
+  h += '<section class="hero mint" id="hgHero">' +
+    '<div class="eyebrow">Tomorrow morning</div>' +
+    '<div class="big text" id="hgTier"></div>' +
+    '<div class="sub" id="hgText"></div>' +
+    heroRow([{ k: 'Peak BAC', id: 'hgPeak' }, { k: 'Drinks', id: 'hgTotal' }, { k: 'Water', id: 'hgWater' }]) +
+  '</section>';
+  h += '<section class="card"><h2>How you want to wake up</h2>';
+  h += '<div class="seg" id="goalSeg">' + GOALS.map(function(o, i){
+    return '<button data-g="' + i + '"' + (o.v === g ? ' class="on"' : '') + '>' + o.label + '</button>';
+  }).join('') + '</div>';
+  h += '<div class="field first"><span class="k">Next drink</span><span class="v strong" id="hgNext"></span></div>';
+  h += '<div class="field"><span class="k">One more now</span><span class="v" id="hgOneMore"></span></div>';
+  h += '<p class="note" id="hgGoalNote"></p>';
+  h += '</section>';
+  h += '<section class="card"><h2>What actually helps</h2><ul>' +
+    '<li id="hgWaterTip"></li>' +
+    '<li>Eat before you start and eat again mid session.</li>' +
+    '<li>Stop drinking a couple of hours before bed. Two drinks less, the whole next day back.</li>' +
+    '<li>Australian guideline is no more than 4 standard drinks in any one day.</li>' +
+  '</ul></section>';
+  return h;
+}
+
+function renderSettings(){
+  var s = state.settings;
+  var h = '';
+  h += '<section class="card"><h2>You</h2>' +
+    '<div class="field first"><label for="sName">Name</label><input type="text" id="sName" value="' + esc(s.name || '') + '" autocomplete="off"></div>' +
+    '<div class="field"><label for="sWeight">Weight</label><span class="unit"><input type="number" id="sWeight" inputmode="decimal" min="30" max="250" value="' + esc(s.weight) + '">kg</span></div>' +
+    '<div class="field"><span class="k">Sex</span><span></span></div>' +
+    '<div class="seg" id="sexSeg"><button data-sex="male"' + (s.sex === 'male' ? ' class="on"' : '') + '>Male</button><button data-sex="female"' + (s.sex === 'female' ? ' class="on"' : '') + '>Female</button></div>' +
+  '</section>';
+  h += '<section class="card"><h2>Licence</h2>' +
+    '<div class="seg" id="licSeg"><button data-lic="open"' + (s.licence === 'open' ? ' class="on"' : '') + '>Open, under 0.05</button><button data-lic="zero"' + (s.licence !== 'open' ? ' class="on"' : '') + '>Zero limit</button></div>' +
+    '<p class="note">Zero limit covers L, P1, P2, probationary, restricted and interlock licences in Queensland.</p>' +
+  '</section>';
+  h += '<section class="card"><h2>Log</h2>' +
+    '<button class="btn danger" id="resetBtn">' + (resetArmed ? 'Tap again to clear everything' : 'Clear today\u2019s log') + '</button>' +
+    '<p class="note">Everything saves on this phone only. Nothing leaves it.</p>' +
+  '</section>';
+  h += '<section class="card"><h2>How this works</h2>' +
+    '<p class="note" style="margin-top:0">One standard drink is 10g of alcohol. Each one lifts your BAC by about ' + fmtBac(perDrink()) + ' at your weight. Your body clears about 0.015 an hour. Each drink soaks in over about 30 minutes. Log it when you start it, or halfway through a slow one. Only a breath test knows your real number.</p>' +
+  '</section>';
+  return h;
+}
+
+function render(){
+  var s = state.settings;
+  el('who').textContent = (s.name ? s.name + ', ' : '') + (Number(s.weight) || 71) + 'kg';
+  var v = el('view');
+  if (tab === 'track') v.innerHTML = renderTrack();
+  else if (tab === 'drive') v.innerHTML = renderDrive();
+  else if (tab === 'tomorrow') v.innerHTML = renderTomorrow();
+  else v.innerHTML = renderSettings();
+  Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), function(b){
+    b.classList.toggle('on', b.getAttribute('data-tab') === tab);
+  });
+  bind();
+  tick();
+}
+
+function bind(){
+  var v = el('view');
+  Array.prototype.forEach.call(v.querySelectorAll('#offSeg button'), function(b){
+    b.addEventListener('click', function(){
+      offsetMin = Number(b.getAttribute('data-off'));
+      Array.prototype.forEach.call(v.querySelectorAll('#offSeg button'), function(x){ x.classList.toggle('on', x === b); });
+    });
+  });
+  Array.prototype.forEach.call(v.querySelectorAll('.drink[data-i]'), function(b){
+    b.addEventListener('click', function(){
+      var p = PRESETS[Number(b.getAttribute('data-i'))];
+      logDrink(p.name, p.std);
+    });
+  });
+  var cb = el('customBtn');
+  if (cb) cb.addEventListener('click', function(){ customOpen = !customOpen; render(); if (customOpen && el('cName')) el('cName').focus(); });
+  var wb = el('waterBtn');
+  if (wb) wb.addEventListener('click', logWater);
+  var cAdd = el('cAdd');
+  if (cAdd) cAdd.addEventListener('click', function(){
+    var n = (el('cName').value || '').trim() || 'Drink';
+    var sd = Number(el('cStd').value);
+    if (!sd || sd <= 0) { el('cStd').focus(); toast('Put in the standard drinks'); return; }
+    logDrink(n, Math.round(sd * 10) / 10);
+  });
+  var cCancel = el('cCancel');
+  if (cCancel) cCancel.addEventListener('click', function(){ customOpen = false; render(); });
+  Array.prototype.forEach.call(v.querySelectorAll('button[data-rm]'), function(b){
+    b.addEventListener('click', function(){ removeDrink(b.getAttribute('data-rm')); });
+  });
+  Array.prototype.forEach.call(v.querySelectorAll('#goalSeg button'), function(b){
+    b.addEventListener('click', function(){
+      state.settings.goal = GOALS[Number(b.getAttribute('data-g'))].v;
+      save(); render();
+    });
+  });
+  var sName = el('sName');
+  if (sName) sName.addEventListener('input', function(){ state.settings.name = sName.value.trim(); save(); el('who').textContent = (state.settings.name ? state.settings.name + ', ' : '') + (Number(state.settings.weight) || 71) + 'kg'; });
+  var sWeight = el('sWeight');
+  if (sWeight) sWeight.addEventListener('input', function(){
+    var w = Number(sWeight.value);
+    if (w >= 30 && w <= 250) { state.settings.weight = w; save(); el('who').textContent = (state.settings.name ? state.settings.name + ', ' : '') + w + 'kg'; }
+  });
+  Array.prototype.forEach.call(v.querySelectorAll('#sexSeg button'), function(b){
+    b.addEventListener('click', function(){
+      state.settings.sex = b.getAttribute('data-sex'); save();
+      Array.prototype.forEach.call(v.querySelectorAll('#sexSeg button'), function(x){ x.classList.toggle('on', x === b); });
+    });
+  });
+  Array.prototype.forEach.call(v.querySelectorAll('#licSeg button'), function(b){
+    b.addEventListener('click', function(){
+      state.settings.licence = b.getAttribute('data-lic'); save();
+      Array.prototype.forEach.call(v.querySelectorAll('#licSeg button'), function(x){ x.classList.toggle('on', x === b); });
+    });
+  });
+  var rb = el('resetBtn');
+  if (rb) rb.addEventListener('click', function(){
+    if (resetArmed) {
+      state.drinks = []; state.water = []; resetArmed = 0; save(); render(); toast('Log cleared');
+    } else {
+      resetArmed = 1; rb.textContent = 'Tap again to clear everything';
+      setTimeout(function(){ resetArmed = 0; var r = el('resetBtn'); if (r) r.textContent = 'Clear today\u2019s log'; }, 3000);
+    }
+  });
+}
+
+function setHero(id, color){
+  var n = el(id);
+  if (!n) return;
+  var want = 'hero ' + color;
+  if (n.className !== want) n.className = want;
+}
+
+function tick(){
+  var now = Date.now();
+  var sim = simulate(now);
+  var eff = sim.bac + sim.pending;
+  var peak = Math.max(sim.peak, eff);
+  var tot = total();
+  var pd = perDrink();
+  var g = state.settings.goal;
+
+  if (tab === 'track') {
+    var nd = nextDrink(now);
+    var di = driveInfo(now);
+    if (nd === null) {
+      setHero('hero', 'lilac');
+      set('heroEyebrow', 'Estimated BAC');
+      set('heroBig', fmtBac(eff));
+      set('heroSub', 'No cap set. Pick one in Tomorrow if you want pacing.');
+    } else if (nd.never) {
+      setHero('hero', 'rose');
+      set('heroEyebrow', 'Heads up');
+      set('heroBig', '0');
+      set('heroSub', 'One standard drink alone puts you over ' + fmtGoal(g) + ' at your weight.');
+    } else if (nd.ok) {
+      setHero('hero', 'mint');
+      set('heroEyebrow', 'Next drink');
+      set('heroBig', 'Now');
+      set('heroSub', state.drinks.length ? 'You can have one and stay under ' + fmtGoal(g) + '.' : 'Ready when you are. Your cap is ' + fmtGoal(g) + '.');
+    } else {
+      setHero('hero', 'peach');
+      set('heroEyebrow', 'Next drink in');
+      set('heroBig', fmtCountdown(nd.sec));
+      set('heroSub', 'Keeps your peak under ' + fmtGoal(g) + '. That is about ' + fmtTime(nd.at) + '.');
+    }
+    var bigEl = el('heroBig');
+    if (bigEl) bigEl.classList.toggle('text', nd !== null && !nd.never && nd.ok);
+    set('heroBac', fmtBac(eff));
+    set('heroTotal', fmtStd(tot) + ' std');
+    set('heroDrive', di.status);
+    set('waterCount', state.water.length + ' today');
+    set('logHead', state.drinks.length ? 'Today, ' + fmtStd(tot) + ' standard drinks' : 'Today');
+  }
+
+  if (tab === 'drive') {
+    var d = driveInfo(now);
+    setHero('driveHero', d.color);
+    set('driveStatus', d.status);
+    var limitTxt = d.zero ? 'Your limit is zero.' : 'Your limit is under 0.05.';
+    if (d.status === 'Clear') {
+      set('driveSub', state.drinks.length ? 'Estimate is back to zero. ' + limitTxt : 'Nothing logged. ' + limitTxt);
+    } else {
+      set('driveSub', 'Estimated BAC ' + fmtBac(d.bac) + '. ' + limitTxt);
+    }
+    if (!d.zero) set('driveUnder', d.hUnder <= 0 ? 'Now' : 'About ' + fmtWhen(d.underAt) + ', in ' + fmtDur(d.hUnder));
+    set('driveZero', d.hZero <= 0 ? 'Now' : 'About ' + fmtWhen(d.zeroAt) + ', in ' + fmtDur(d.hZero));
+  }
+
+  if (tab === 'tomorrow') {
+    var ti = tierIndex(peak, tot);
+    var tr = TIERS[ti];
+    setHero('hgHero', tr.color);
+    set('hgTier', state.drinks.length ? tr.label : 'Fresh');
+    set('hgText', state.drinks.length ? tr.text : 'Nothing logged yet.');
+    set('hgPeak', fmtBac(peak));
+    set('hgTotal', fmtStd(tot) + ' std');
+    var need = Math.ceil(tot);
+    set('hgWater', state.water.length + ' of ' + need);
+    var nd2 = nextDrink(now);
+    if (nd2 === null) set('hgNext', 'No cap set');
+    else if (nd2.never) set('hgNext', 'Not under this cap');
+    else if (nd2.ok) set('hgNext', 'Now');
+    else set('hgNext', fmtCountdown(nd2.sec) + ', about ' + fmtTime(nd2.at));
+    var projPeak = Math.max(peak, eff + pd);
+    var projTier = TIERS[tierIndex(projPeak, tot + 1)];
+    set('hgOneMore', 'Peak ' + fmtBac(projPeak) + ', ' + projTier.label.toLowerCase());
+    if (g === null || g === undefined) set('hgGoalNote', 'No cap means no pacing timer. The estimate still updates as you log drinks.');
+    else set('hgGoalNote', 'The timer keeps your peak under ' + fmtGoal(g) + '. Under 0.05 most people wake up fine. Over 0.08 a hangover is likely. Over 0.11 it is near certain.');
+    set('hgWaterTip', 'Water. One glass per drink. You are at ' + state.water.length + ' of ' + need + '.');
+  }
+}
+
+Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), function(b){
+  b.addEventListener('click', function(){
+    tab = b.getAttribute('data-tab');
+    customOpen = false;
+    render();
+    window.scrollTo(0, 0);
+  });
+});
+
+render();
+setInterval(tick, 1000);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) tick(); });
+})();
+</script>
+</body>
+</html>
