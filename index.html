@@ -77,9 +77,12 @@
   .hero .stat{flex:1;min-width:0}
   .hero .stat .k{font-size:12px;opacity:.75}
   .hero .stat .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar{height:10px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;margin-top:14px}
+  .bar i{display:block;height:100%;border-radius:999px;background:currentColor;opacity:.55;width:0;transition:width .3s}
 
   .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
-  .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 0;font:inherit;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer}
+  .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 0;font:inherit;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .seg.five button{font-size:12px;padding:9px 0}
   .seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -114,6 +117,9 @@
   .field input{font:inherit;font-size:16px;width:150px;text-align:right;border:0;background:var(--bg);border-radius:10px;padding:9px 12px;color:var(--text)}
   .field .unit{display:flex;align-items:center;gap:8px;color:var(--muted)}
   .field .unit input{width:90px}
+  .ex{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+  .ex:first-of-type{border-top:0}
+  .ex b{color:var(--text);font-weight:500}
 
   .btn{border:0;border-radius:12px;padding:13px 16px;font:inherit;font-size:16px;font-weight:600;background:var(--text);color:var(--card);width:100%;cursor:pointer}
   .btn.ghost{background:var(--bg);color:var(--text)}
@@ -121,7 +127,7 @@
   .note{color:var(--muted);font-size:14px;margin:10px 0 0}
   .empty{color:var(--muted);font-size:15px;padding:6px 0}
 
-  .tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--tab);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 8px calc(10px + env(safe-area-inset-bottom,0px))}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--tab);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(10px + env(safe-area-inset-bottom,0px))}
   .tabbar .inner{display:flex;width:100%;max-width:480px}
   .tabbar button{flex:1;border:0;background:transparent;font:inherit;font-size:11px;font-weight:500;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer}
   .tabbar button.on{color:var(--sky-ink)}
@@ -131,7 +137,7 @@
   .toast.show{opacity:1}
 
   button:focus-visible,input:focus-visible{outline:2px solid var(--sky-ink);outline-offset:2px}
-  @media (prefers-reduced-motion:reduce){.toast,.hero,.drink{transition:none}.drink:active{transform:none}}
+  @media (prefers-reduced-motion:reduce){.toast,.hero,.drink,.bar i{transition:none}.drink:active{transform:none}}
 </style>
 </head>
 <body>
@@ -157,6 +163,10 @@
       <svg viewBox="0 0 24 24"><path d="M4 17h16"/><path d="M7.5 17a4.5 4.5 0 0 1 9 0"/><path d="M12 7v2M5.5 10l1.4 1.4M18.5 10l-1.4 1.4M3 14h2M19 14h2"/></svg>
       Tomorrow
     </button>
+    <button data-tab="calories">
+      <svg viewBox="0 0 24 24"><path d="M12 3.5c.6 2.6 3.8 4.4 3.8 8.3a3.8 3.8 0 0 1-7.6 0c0-1.3.5-2.3 1.2-3.1.2 1.1.8 1.8 1.6 2.2-.3-2.7.1-5 1-7.4z"/><path d="M12 20.5v-2"/></svg>
+      Calories
+    </button>
     <button data-tab="settings">
       <svg viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
       Settings
@@ -172,31 +182,28 @@
 
 var KEY = 'drinklimit.v1';
 var BETA = 0.015;
-var RDIST = { male: 0.68, female: 0.55 };
 var ABS = 30 * 60000;
 var ABS_FED = 60 * 60000;
 var FOOD_WINDOW = 2 * 3.6e6;
 var FOOD_MULT = 0.8;
+var CAL_PER_STD = 70;
+var BIG_MAC = 550;
 var PRESETS = [
-  { name: 'Hard Solo', std: 1.3, note: '375ml can, 4.5%' },
-  { name: 'Vodka water', std: 1.0, note: '30ml nip' },
-  { name: 'Gin and dry', std: 1.0, note: '30ml nip' },
-  { name: 'Tequila shot', std: 1.0, note: '30ml' },
-  { name: 'Wet cat shot', std: 0.7, note: 'mixed shot, varies' },
-  { name: 'Double spirit', std: 2.0, note: '60ml or a free pour' },
-  { name: 'Cocktail', std: 1.5, note: 'club pour' },
-  { name: 'Beer can', std: 1.3, note: '375ml full strength' }
-];
-var GOALS = [
-  { v: 0.05, label: 'Fresh' },
-  { v: 0.08, label: 'Bit rough' },
-  { v: null, label: 'No cap' }
+  { name: 'Hard Solo', std: 1.3, cal: 100, note: '375ml can, zero sugar' },
+  { name: 'Vodka water', std: 1.0, cal: 65, note: '30ml nip' },
+  { name: 'Gin and dry', std: 1.0, cal: 125, note: '30ml nip plus mixer' },
+  { name: 'Tequila shot', std: 1.0, cal: 65, note: '30ml' },
+  { name: 'Wet cat shot', std: 0.7, cal: 70, note: 'mixed shot, varies' },
+  { name: 'Double spirit', std: 2.0, cal: 130, note: '60ml, add 70 for a sugary mixer' },
+  { name: 'Cocktail', std: 1.5, cal: 220, note: 'club pour' },
+  { name: 'Beer can', std: 1.3, cal: 145, note: '375ml full strength' }
 ];
 var TIERS = [
-  { label: 'Fresh', color: 'mint', text: 'You should wake up fine.' },
-  { label: 'Bit rough', color: 'sky', text: 'A bit dusty tomorrow. Water and food fix most of it.' },
-  { label: 'Rough', color: 'peach', text: 'Tomorrow morning will hurt.' },
-  { label: 'Wrecked', color: 'rose', text: 'Write tomorrow off.' }
+  { label: 'Fresh', color: 'mint', cap: 0.05, text: 'You should wake up fine.' },
+  { label: 'Fine', color: 'sky', cap: 0.065, text: 'Maybe a bit slow in the morning. Nothing a coffee will not fix.' },
+  { label: 'Bit rough', color: 'lilac', cap: 0.08, text: 'A bit dusty tomorrow. Water and food fix most of it.' },
+  { label: 'Rough', color: 'peach', cap: 0.11, text: 'Tomorrow morning will hurt.' },
+  { label: 'Borrowing', color: 'rose', cap: null, text: 'Anything more from now is just borrowing happiness from tomorrow.' }
 ];
 var OFFSETS = [
   { m: 0, label: 'Now' },
@@ -213,7 +220,11 @@ var resetArmed = 0;
 var toastTimer = null;
 
 function defaults(){
-  return { settings: { name: 'Jordy', weight: 71, sex: 'male', licence: 'open', goal: 0.05 }, items: [] };
+  return { settings: { name: 'Jordy', age: 34, height: 175, weight: 71, sex: 'male', licence: 'open', goal: 0.05, calLimit: 1000 }, items: [] };
+}
+function presetByName(n){
+  for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].name === n) return PRESETS[i];
+  return null;
 }
 function load(){
   try {
@@ -227,7 +238,17 @@ function load(){
         if (Array.isArray(s.drinks)) s.drinks.forEach(function(x){ items.push({ id: x.id, t: x.t, type: 'drink', name: x.name, std: x.std }); });
         if (Array.isArray(s.water)) s.water.forEach(function(w, i){ items.push({ id: 'w' + w + i, t: w, type: 'water', name: 'Water', std: 0 }); });
       }
+      items.forEach(function(x){
+        if (x.type === 'drink' && (x.cal === undefined || x.cal === null)) {
+          var p = presetByName(x.name);
+          x.cal = p ? p.cal : Math.round(Number(x.std) * CAL_PER_STD);
+        }
+        if (x.type !== 'drink') x.cal = 0;
+      });
       d.items = items;
+      var ok = false;
+      for (var k = 0; k < TIERS.length; k++) if (TIERS[k].cap === d.settings.goal) ok = true;
+      if (!ok) d.settings.goal = 0.05;
       return d;
     }
   } catch (e) {}
@@ -244,6 +265,7 @@ function esc(s){
   });
 }
 function set(id, txt){ var n = el(id); if (n && n.textContent !== txt) n.textContent = txt; }
+function clamp(v, lo, hi){ return Math.min(hi, Math.max(lo, v)); }
 
 function drinksList(){ return state.items.filter(function(x){ return x.type === 'drink'; }); }
 function waterCount(){ return state.items.filter(function(x){ return x.type === 'water'; }).length; }
@@ -258,11 +280,25 @@ function fedAt(t){
   return false;
 }
 
-function perDrink(){
+function bodyNumbers(){
   var s = state.settings;
-  var r = RDIST[s.sex] || 0.68;
-  var w = Math.max(30, Number(s.weight) || 71) * 1000;
-  return (10 / (w * r)) * 100;
+  return {
+    W: clamp(Number(s.weight) || 71, 30, 250),
+    H: clamp(Number(s.height) || 175, 120, 230),
+    A: clamp(Number(s.age) || 34, 18, 100),
+    female: s.sex === 'female'
+  };
+}
+function rFactor(){
+  var b = bodyNumbers();
+  var tbw = b.female
+    ? (-2.097 + 0.1069 * b.H + 0.2466 * b.W)
+    : (2.447 - 0.09516 * b.A + 0.1074 * b.H + 0.3362 * b.W);
+  return clamp(1.25 * tbw / b.W, 0.5, 0.85);
+}
+function perDrink(){
+  var b = bodyNumbers();
+  return (10 / (b.W * 1000 * rFactor())) * 100;
 }
 function simulate(t){
   var pd = perDrink();
@@ -298,6 +334,7 @@ function simulate(t){
   return { bac: bac, peak: peak, last: last, pending: pending };
 }
 function total(){ return drinksList().reduce(function(a, d){ return a + Number(d.std); }, 0); }
+function totalCal(){ return drinksList().reduce(function(a, d){ return a + (Number(d.cal) || 0); }, 0); }
 function hoursUntil(bac, target){ return bac > target ? (bac - target) / BETA : 0; }
 function nextDose(now){ return perDrink() * (fedAt(now) ? FOOD_MULT : 1); }
 
@@ -329,10 +366,10 @@ function nextDrink(now){
 }
 function dehydrated(tot, water){ return tot >= 6 && water < tot / 2; }
 function tierIndex(peak, tot, water){
-  var i = peak < 0.05 ? 0 : peak < 0.08 ? 1 : peak < 0.11 ? 2 : 3;
-  if (tot >= 10 && i < 1) i = 1;
-  if (tot >= 14 && i < 2) i = 2;
-  if (dehydrated(tot, water)) i = Math.min(3, i + 1);
+  var i = peak < 0.05 ? 0 : peak < 0.065 ? 1 : peak < 0.08 ? 2 : peak < 0.11 ? 3 : 4;
+  if (tot >= 10 && i < 2) i = 2;
+  if (tot >= 14 && i < 3) i = 3;
+  if (dehydrated(tot, water)) i = Math.min(4, i + 1);
   return i;
 }
 
@@ -362,8 +399,9 @@ function fmtCountdown(sec){
   function p(n){ return (n < 10 ? '0' : '') + n; }
   return h ? h + ':' + p(m) + ':' + p(s) : p(m) + ':' + p(s);
 }
-function fmtGoal(g){ return g.toFixed(2); }
+function fmtGoal(g){ return g.toFixed(g === 0.065 ? 3 : 2); }
 function fmtStd(n){ return (Math.round(n * 10) / 10).toFixed(1); }
+function fmtNum(n){ return Math.round(n).toLocaleString('en-AU'); }
 
 function toast(msg){
   var t = el('toast');
@@ -373,14 +411,14 @@ function toast(msg){
   toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
 }
 
-function logItem(type, name, std){
+function logItem(type, name, std, cal){
   var t = Date.now() - offsetMin * 60000;
-  state.items.push({ id: t + Math.random().toString(36).slice(2, 7), t: t, type: type, name: name, std: Number(std) || 0 });
+  state.items.push({ id: t + Math.random().toString(36).slice(2, 7), t: t, type: type, name: name, std: Number(std) || 0, cal: type === 'drink' ? Math.round(Number(cal) || 0) : 0 });
   offsetMin = 0;
   customOpen = false;
   save();
   render();
-  if (type === 'drink') toast('Logged ' + name + ', ' + fmtStd(std) + ' std');
+  if (type === 'drink') toast('Logged ' + name + ', ' + fmtStd(std) + ' std, ' + Math.round(cal) + ' cal');
   else toast(name + ' logged');
 }
 function removeItem(id){
@@ -393,6 +431,11 @@ function heroRow(stats){
   return '<div class="row">' + stats.map(function(s){
     return '<div class="stat"><div class="k">' + s.k + '</div><div class="v" id="' + s.id + '"></div></div>';
   }).join('') + '</div>';
+}
+function exampleRows(){
+  return PRESETS.map(function(p){
+    return '<div class="ex"><b>' + esc(p.name) + '</b><span>' + p.cal + ' cal</span></div>';
+  }).join('');
 }
 
 function renderTrack(){
@@ -409,16 +452,17 @@ function renderTrack(){
     return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
   }).join('') + '</div>';
   h += '<div class="grid">' + PRESETS.map(function(p, i){
-    return '<button class="drink" data-i="' + i + '"><span class="n">' + esc(p.name) + '</span><span class="s">' + fmtStd(p.std) + ' std, ' + esc(p.note) + '</span></button>';
+    return '<button class="drink" data-i="' + i + '"><span class="n">' + esc(p.name) + '</span><span class="s">' + fmtStd(p.std) + ' std, ' + p.cal + ' cal</span></button>';
   }).join('');
-  h += '<button class="drink custom" id="customBtn"><span class="n">Something else</span><span class="s">Enter the standard drinks</span></button>';
+  h += '<button class="drink custom" id="customBtn"><span class="n">Something else</span><span class="s">Type in the standard drinks</span></button>';
   h += '<button class="drink water" id="waterBtn"><span class="n">Water</span><span class="s" id="waterCount"></span></button>';
   h += '<button class="drink food" id="foodBtn"><span class="n">Food</span><span class="s" id="foodCount"></span></button>';
   h += '</div>';
   if (customOpen) {
     h += '<div class="inline">' +
       '<input type="text" id="cName" placeholder="What is it" autocomplete="off">' +
-      '<input type="number" id="cStd" inputmode="decimal" step="0.1" min="0.1" placeholder="Standard drinks, it is printed on the can or bottle">' +
+      '<input type="number" id="cStd" inputmode="decimal" step="0.1" min="0.1" placeholder="Standard drinks, printed on the can">' +
+      '<input type="number" id="cCal" inputmode="numeric" step="1" min="0" placeholder="Calories if you know them, optional">' +
       '<div class="pair"><button class="btn ghost" id="cCancel">Cancel</button><button class="btn" id="cAdd">Add it</button></div>' +
     '</div>';
   }
@@ -473,8 +517,8 @@ function renderTomorrow(){
     heroRow([{ k: 'Peak BAC', id: 'hgPeak' }, { k: 'Drinks', id: 'hgTotal' }, { k: 'Water', id: 'hgWater' }]) +
   '</section>';
   h += '<section class="card"><h2>How you want to wake up</h2>';
-  h += '<div class="seg" id="goalSeg">' + GOALS.map(function(o, i){
-    return '<button data-g="' + i + '"' + (o.v === g ? ' class="on"' : '') + '>' + o.label + '</button>';
+  h += '<div class="seg five" id="goalSeg">' + TIERS.map(function(o, i){
+    return '<button data-g="' + i + '"' + (o.cap === g ? ' class="on"' : '') + '>' + o.label + '</button>';
   }).join('') + '</div>';
   h += '<div class="field first"><span class="k">Next drink</span><span class="v strong" id="hgNext"></span></div>';
   h += '<div class="field"><span class="k">One more now</span><span class="v" id="hgOneMore"></span></div>';
@@ -489,11 +533,44 @@ function renderTomorrow(){
   return h;
 }
 
+function renderCalories(){
+  var h = '';
+  h += '<section class="hero mint" id="calHero">' +
+    '<div class="eyebrow">Calories from drinks</div>' +
+    '<div class="big" id="calBig"></div>' +
+    '<div class="sub" id="calSub"></div>' +
+    '<div class="bar"><i id="calBar"></i></div>' +
+    heroRow([{ k: 'Limit', id: 'calLimit' }, { k: 'Left', id: 'calLeft' }, { k: 'Big Macs', id: 'calMac' }]) +
+  '</section>';
+  h += '<section class="card log"><h2>Today</h2>';
+  var ds = drinksList().slice().sort(function(a, b){ return b.t - a.t; });
+  if (!ds.length) {
+    h += '<div class="empty">Nothing logged yet.</div>';
+  } else {
+    h += ds.map(function(d){
+      return '<div class="item"><span class="t">' + fmtTime(new Date(d.t)) + '</span><span class="nm">' + esc(d.name) + '</span><span class="sd">' + Math.round(d.cal) + ' cal</span></div>';
+    }).join('');
+  }
+  h += '</section>';
+  h += '<section class="card"><h2>What drinks cost</h2>' + exampleRows() +
+    '<p class="note">Alcohol is 7 calories a gram, so every standard drink is about 70 before the mixer. Soda water adds nothing. Coke, dry, tonic or juice add 50 to 100. A cocktail can be 200 to 400.</p>' +
+  '</section>';
+  h += '<section class="card"><h2>Cheap swaps</h2><ul>' +
+    '<li>Vodka soda instead of gin and dry saves 60 a round.</li>' +
+    '<li>Hard Solo is zero sugar now, so it is about the same as a nip.</li>' +
+    '<li>One cocktail is three vodka sodas.</li>' +
+    '<li>Every water in between is a drink you did not have.</li>' +
+  '</ul></section>';
+  return h;
+}
+
 function renderSettings(){
   var s = state.settings;
   var h = '';
   h += '<section class="card"><h2>You</h2>' +
     '<div class="field first"><label for="sName">Name</label><input type="text" id="sName" value="' + esc(s.name || '') + '" autocomplete="off"></div>' +
+    '<div class="field"><label for="sAge">Age</label><span class="unit"><input type="number" id="sAge" inputmode="numeric" min="18" max="100" value="' + esc(s.age) + '">yrs</span></div>' +
+    '<div class="field"><label for="sHeight">Height</label><span class="unit"><input type="number" id="sHeight" inputmode="numeric" min="120" max="230" value="' + esc(s.height) + '">cm</span></div>' +
     '<div class="field"><label for="sWeight">Weight</label><span class="unit"><input type="number" id="sWeight" inputmode="decimal" min="30" max="250" value="' + esc(s.weight) + '">kg</span></div>' +
     '<div class="field"><span class="k">Sex</span><span></span></div>' +
     '<div class="seg" id="sexSeg"><button data-sex="male"' + (s.sex === 'male' ? ' class="on"' : '') + '>Male</button><button data-sex="female"' + (s.sex === 'female' ? ' class="on"' : '') + '>Female</button></div>' +
@@ -502,12 +579,17 @@ function renderSettings(){
     '<div class="seg" id="licSeg"><button data-lic="open"' + (s.licence === 'open' ? ' class="on"' : '') + '>Open, under 0.05</button><button data-lic="zero"' + (s.licence !== 'open' ? ' class="on"' : '') + '>Zero limit</button></div>' +
     '<p class="note">Zero limit covers L, P1, P2, probationary, restricted and interlock licences in Queensland.</p>' +
   '</section>';
+  h += '<section class="card"><h2>Calories for the night</h2>' +
+    '<div class="field first"><label for="sCal">Limit</label><span class="unit"><input type="number" id="sCal" inputmode="numeric" min="0" max="10000" step="50" value="' + esc(s.calLimit) + '">cal</span></div>' +
+    '<p class="note" style="margin-bottom:8px">What the usual ones cost you.</p>' +
+    exampleRows() +
+  '</section>';
   h += '<section class="card"><h2>Log</h2>' +
     '<button class="btn danger" id="resetBtn">' + (resetArmed ? 'Tap again to clear everything' : 'Clear today\u2019s log') + '</button>' +
     '<p class="note">Everything saves on this phone only. Nothing leaves it.</p>' +
   '</section>';
   h += '<section class="card"><h2>How this works</h2>' +
-    '<p class="note" style="margin-top:0">One standard drink is 10g of alcohol. Each one lifts your BAC by about ' + fmtBac(perDrink()) + ' at your weight and soaks in over about 30 minutes. Log it when you start it, or halfway through a slow one. A proper meal makes the drinks in the next two hours soak in slower and takes about a fifth off what reaches your blood. Water changes nothing on the BAC side, it only helps tomorrow. Your body clears about 0.015 an hour. Only a breath test knows your real number.</p>' +
+    '<p class="note" style="margin-top:0" id="howText"></p>' +
   '</section>';
   return h;
 }
@@ -519,12 +601,26 @@ function render(){
   if (tab === 'track') v.innerHTML = renderTrack();
   else if (tab === 'drive') v.innerHTML = renderDrive();
   else if (tab === 'tomorrow') v.innerHTML = renderTomorrow();
+  else if (tab === 'calories') v.innerHTML = renderCalories();
   else v.innerHTML = renderSettings();
   Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), function(b){
     b.classList.toggle('on', b.getAttribute('data-tab') === tab);
   });
   bind();
   tick();
+}
+
+function updateWho(){
+  var s = state.settings;
+  el('who').textContent = (s.name ? s.name + ', ' : '') + (Number(s.weight) || 71) + 'kg';
+}
+function numField(id, key, lo, hi){
+  var n = el(id);
+  if (!n) return;
+  n.addEventListener('input', function(){
+    var v = Number(n.value);
+    if (v >= lo && v <= hi) { state.settings[key] = v; save(); updateWho(); tick(); }
+  });
 }
 
 function bind(){
@@ -538,21 +634,24 @@ function bind(){
   Array.prototype.forEach.call(v.querySelectorAll('.drink[data-i]'), function(b){
     b.addEventListener('click', function(){
       var p = PRESETS[Number(b.getAttribute('data-i'))];
-      logItem('drink', p.name, p.std);
+      logItem('drink', p.name, p.std, p.cal);
     });
   });
   var cb = el('customBtn');
   if (cb) cb.addEventListener('click', function(){ customOpen = !customOpen; render(); if (customOpen && el('cName')) el('cName').focus(); });
   var wb = el('waterBtn');
-  if (wb) wb.addEventListener('click', function(){ logItem('water', 'Water', 0); });
+  if (wb) wb.addEventListener('click', function(){ logItem('water', 'Water', 0, 0); });
   var fb = el('foodBtn');
-  if (fb) fb.addEventListener('click', function(){ logItem('food', 'Food', 0); });
+  if (fb) fb.addEventListener('click', function(){ logItem('food', 'Food', 0, 0); });
   var cAdd = el('cAdd');
   if (cAdd) cAdd.addEventListener('click', function(){
     var n = (el('cName').value || '').trim() || 'Drink';
     var sd = Number(el('cStd').value);
     if (!sd || sd <= 0) { el('cStd').focus(); toast('Put in the standard drinks'); return; }
-    logItem('drink', n, Math.round(sd * 10) / 10);
+    sd = Math.round(sd * 10) / 10;
+    var c = Number(el('cCal').value);
+    if (!c || c < 0) c = sd * CAL_PER_STD;
+    logItem('drink', n, sd, c);
   });
   var cCancel = el('cCancel');
   if (cCancel) cCancel.addEventListener('click', function(){ customOpen = false; render(); });
@@ -561,20 +660,19 @@ function bind(){
   });
   Array.prototype.forEach.call(v.querySelectorAll('#goalSeg button'), function(b){
     b.addEventListener('click', function(){
-      state.settings.goal = GOALS[Number(b.getAttribute('data-g'))].v;
+      state.settings.goal = TIERS[Number(b.getAttribute('data-g'))].cap;
       save(); render();
     });
   });
   var sName = el('sName');
-  if (sName) sName.addEventListener('input', function(){ state.settings.name = sName.value.trim(); save(); el('who').textContent = (state.settings.name ? state.settings.name + ', ' : '') + (Number(state.settings.weight) || 71) + 'kg'; });
-  var sWeight = el('sWeight');
-  if (sWeight) sWeight.addEventListener('input', function(){
-    var w = Number(sWeight.value);
-    if (w >= 30 && w <= 250) { state.settings.weight = w; save(); el('who').textContent = (state.settings.name ? state.settings.name + ', ' : '') + w + 'kg'; }
-  });
+  if (sName) sName.addEventListener('input', function(){ state.settings.name = sName.value.trim(); save(); updateWho(); });
+  numField('sAge', 'age', 18, 100);
+  numField('sHeight', 'height', 120, 230);
+  numField('sWeight', 'weight', 30, 250);
+  numField('sCal', 'calLimit', 0, 10000);
   Array.prototype.forEach.call(v.querySelectorAll('#sexSeg button'), function(b){
     b.addEventListener('click', function(){
-      state.settings.sex = b.getAttribute('data-sex'); save();
+      state.settings.sex = b.getAttribute('data-sex'); save(); tick();
       Array.prototype.forEach.call(v.querySelectorAll('#sexSeg button'), function(x){ x.classList.toggle('on', x === b); });
     });
   });
@@ -612,20 +710,21 @@ function tick(){
   var dose = nextDose(now);
   var g = state.settings.goal;
   var nDrinks = drinksList().length;
+  var cal = totalCal();
 
   if (tab === 'track') {
     var nd = nextDrink(now);
     var di = driveInfo(now);
     if (nd === null) {
-      setHero('hero', 'lilac');
+      setHero('hero', nDrinks ? 'rose' : 'lilac');
       set('heroEyebrow', 'Estimated BAC');
       set('heroBig', fmtBac(eff));
-      set('heroSub', 'No cap set. Pick one in Tomorrow if you want pacing.');
+      set('heroSub', nDrinks ? 'No cap. Anything more from now is just borrowing happiness from tomorrow.' : 'No cap set. Pick one in Tomorrow if you want pacing.');
     } else if (nd.never) {
       setHero('hero', 'rose');
       set('heroEyebrow', 'Heads up');
       set('heroBig', '0');
-      set('heroSub', 'One standard drink alone puts you over ' + fmtGoal(g) + ' at your weight.');
+      set('heroSub', 'One standard drink alone puts you over ' + fmtGoal(g) + ' at your size.');
     } else if (nd.ok) {
       setHero('hero', 'mint');
       set('heroEyebrow', 'Next drink');
@@ -644,7 +743,7 @@ function tick(){
     set('heroDrive', di.status);
     set('waterCount', water + ' today');
     set('foodCount', foodCount() ? foodCount() + ' today' + (fedAt(now) ? ', working now' : '') : 'a proper meal');
-    set('logHead', nDrinks ? 'Today, ' + fmtStd(tot) + ' standard drinks' : 'Today');
+    set('logHead', nDrinks ? 'Today, ' + fmtStd(tot) + ' std, ' + fmtNum(cal) + ' cal' : 'Today');
   }
 
   if (tab === 'drive') {
@@ -673,17 +772,37 @@ function tick(){
     var need = Math.ceil(tot);
     set('hgWater', water + ' of ' + need);
     var nd2 = nextDrink(now);
-    if (nd2 === null) set('hgNext', 'No cap set');
+    if (nd2 === null) set('hgNext', 'No cap');
     else if (nd2.never) set('hgNext', 'Not under this cap');
     else if (nd2.ok) set('hgNext', 'Now');
     else set('hgNext', fmtCountdown(nd2.sec) + ', about ' + fmtTime(nd2.at));
     var projPeak = Math.max(peak, eff + dose);
     var projTier = TIERS[tierIndex(projPeak, tot + 1, water)];
     set('hgOneMore', 'Peak ' + fmtBac(projPeak) + ', ' + projTier.label.toLowerCase());
-    if (g === null || g === undefined) set('hgGoalNote', 'No cap means no pacing timer. The estimate still updates as you log drinks.');
+    if (g === null || g === undefined) set('hgGoalNote', 'No cap, so no timer. Anything more from now is just borrowing happiness from tomorrow.');
     else set('hgGoalNote', 'The timer keeps your peak under ' + fmtGoal(g) + '. Under 0.05 most people wake up fine. Over 0.08 a hangover is likely. Over 0.11 it is near certain.');
     set('hgWaterTip', 'Water. One glass per drink. You are at ' + water + ' of ' + need + '. It does not lower your BAC, it stops the dehydration part.');
     set('hgFoodTip', fedAt(now) ? 'Food. You have eaten recently, so drinks are hitting slower right now. Eat again in a few hours.' : 'Food. A proper meal makes the next two hours of drinks hit slower and softer.');
+  }
+
+  if (tab === 'calories') {
+    var lim = Number(state.settings.calLimit) || 0;
+    var left = lim - cal;
+    var frac = lim > 0 ? cal / lim : 0;
+    setHero('calHero', frac >= 1 ? 'rose' : frac >= 0.7 ? 'peach' : 'mint');
+    set('calBig', fmtNum(cal));
+    if (!lim) set('calSub', 'No limit set. Put one in Settings.');
+    else if (left >= 0) set('calSub', 'of ' + fmtNum(lim) + ' for the night. ' + fmtNum(left) + ' left.');
+    else set('calSub', 'Over your ' + fmtNum(lim) + ' by ' + fmtNum(-left) + '.');
+    var bar = el('calBar');
+    if (bar) bar.style.width = Math.min(100, Math.round(frac * 100)) + '%';
+    set('calLimit', lim ? fmtNum(lim) : 'none');
+    set('calLeft', lim ? fmtNum(Math.max(0, left)) : '');
+    set('calMac', (cal / BIG_MAC).toFixed(1));
+  }
+
+  if (tab === 'settings') {
+    set('howText', 'One standard drink is 10g of alcohol. At your age, height, weight and sex each one lifts your BAC by about ' + fmtBac(perDrink()) + ' and soaks in over about 30 minutes. Log it when you start it. A proper meal makes the next two hours of drinks soak in slower and takes about a fifth off what reaches your blood. Water changes nothing on the BAC side, it only helps tomorrow. Your body clears about 0.015 an hour. Calories are the alcohol at 7 a gram plus the mixer. Only a breath test knows your real number.');
   }
 }
 
