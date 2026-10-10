@@ -54,7 +54,7 @@
   }
   .app{max-width:480px;margin:0 auto;padding:10px 16px 20px}
   .top{display:flex;align-items:baseline;justify-content:space-between;padding:10px 4px 14px}
-  .brand{font-size:28px;font-weight:700;letter-spacing:-.5px}
+  .brand{font-size:28px;font-weight:700;letter-spacing:-.5px;border:0;background:none;color:inherit;font-family:inherit;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .who{color:var(--muted);font-size:14px}
 
   .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -143,7 +143,7 @@
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand">Drink Limit</div>
+    <button class="brand" id="brand" aria-label="Drink Limit">Drink Limit</button>
     <div class="who" id="who"></div>
   </header>
   <main id="view"></main>
@@ -190,6 +190,8 @@ var CAL_PER_STD = 70;
 var BIG_MAC = 550;
 var PRESETS = [
   { name: 'Hard Solo', std: 1.3, cal: 100, note: '375ml can, zero sugar' },
+  { name: 'Hard Solo 6%', std: 1.8, cal: 130, note: '375ml can' },
+  { name: 'Corona', std: 1.3, cal: 150, note: '355ml bottle' },
   { name: 'Vodka water', std: 1.0, cal: 65, note: '30ml nip' },
   { name: 'Gin and dry', std: 1.0, cal: 125, note: '30ml nip plus mixer' },
   { name: 'Tequila shot', std: 1.0, cal: 65, note: '30ml' },
@@ -203,7 +205,7 @@ var TIERS = [
   { label: 'Fine', color: 'sky', cap: 0.065, text: 'Maybe a bit slow in the morning. Nothing a coffee will not fix.' },
   { label: 'Bit rough', color: 'lilac', cap: 0.08, text: 'A bit dusty tomorrow. Water and food fix most of it.' },
   { label: 'Rough', color: 'peach', cap: 0.11, text: 'Tomorrow morning will hurt.' },
-  { label: 'Borrowing', color: 'rose', cap: null, text: 'Anything more from now is just borrowing happiness from tomorrow.' }
+  { label: 'Write off', color: 'rose', cap: null, text: 'Your head\u2019s gonna hurt and it\u2019s a full day write off.' }
 ];
 var OFFSETS = [
   { m: 0, label: 'Now' },
@@ -270,6 +272,9 @@ function clamp(v, lo, hi){ return Math.min(hi, Math.max(lo, v)); }
 function drinksList(){ return state.items.filter(function(x){ return x.type === 'drink'; }); }
 function waterCount(){ return state.items.filter(function(x){ return x.type === 'water'; }).length; }
 function foodCount(){ return state.items.filter(function(x){ return x.type === 'food'; }).length; }
+function nbList(){ return state.items.filter(function(x){ return x.type === 'nb'; }); }
+function nbSince(ms){ var now = Date.now(); return nbList().filter(function(x){ return now - x.t <= ms; }).length; }
+function nbRecent(){ return nbSince(48 * 3.6e6) > 0; }
 function fedAt(t){
   var items = state.items;
   for (var i = 0; i < items.length; i++) {
@@ -348,9 +353,11 @@ function driveInfo(now){
   else if (bac >= 0.05) { status = 'No'; color = 'rose'; }
   else if (bac >= 0.03) { status = 'Risky'; color = 'peach'; }
   else { status = 'Under 0.05'; color = 'mint'; }
+  var nb = nbRecent();
+  if (nb) { status = 'No'; color = 'rose'; }
   var hUnder = zero ? bac / BETA : hoursUntil(bac, 0.05);
   var hZero = bac / BETA;
-  return { bac: bac, status: status, color: color, zero: zero, hUnder: hUnder, hZero: hZero,
+  return { nb: nb, bac: bac, status: status, color: color, zero: zero, hUnder: hUnder, hZero: hZero,
     underAt: new Date(now + hUnder * 3.6e6), zeroAt: new Date(now + hZero * 3.6e6) };
 }
 function nextDrink(now){
@@ -370,6 +377,7 @@ function tierIndex(peak, tot, water){
   if (tot >= 10 && i < 2) i = 2;
   if (tot >= 14 && i < 3) i = 3;
   if (dehydrated(tot, water)) i = Math.min(4, i + 1);
+  if (nbSince(24 * 3.6e6)) i = Math.min(4, i + 1);
   return i;
 }
 
@@ -418,7 +426,8 @@ function logItem(type, name, std, cal){
   customOpen = false;
   save();
   render();
-  if (type === 'drink') toast('Logged ' + name + ', ' + fmtStd(std) + ' std, ' + Math.round(cal) + ' cal');
+  if (type === 'nb') toast('Logged');
+  else if (type === 'drink') toast('Logged ' + name + ', ' + fmtStd(std) + ' std, ' + Math.round(cal) + ' cal');
   else toast(name + ' logged');
 }
 function removeItem(id){
@@ -470,10 +479,11 @@ function renderTrack(){
   h += '</section>';
 
   h += '<section class="card log"><h2 id="logHead">Today</h2>';
-  if (!state.items.length) {
+  var shown = state.items.filter(function(x){ return x.type !== 'nb'; });
+  if (!shown.length) {
     h += '<div class="empty">Nothing logged yet. Tap a drink above when you have one.</div>';
   } else {
-    var sorted = state.items.slice().sort(function(a, b){ return b.t - a.t; });
+    var sorted = shown.slice().sort(function(a, b){ return b.t - a.t; });
     h += sorted.map(function(d){
       var sd = d.type === 'drink' ? fmtStd(d.std) : '';
       return '<div class="item"><span class="t">' + fmtTime(new Date(d.t)) + '</span><span class="nm">' + esc(d.name) + '</span><span class="sd">' + sd + '</span><button class="x" data-rm="' + esc(d.id) + '" aria-label="Remove">\u00d7</button></div>';
@@ -564,12 +574,43 @@ function renderCalories(){
   return h;
 }
 
+function renderNb(){
+  var h = '';
+  h += '<section class="hero lilac" id="nbHero">' +
+    '<div class="eyebrow">Nose beers</div>' +
+    '<div class="big" id="nbBig"></div>' +
+    '<div class="sub" id="nbSub"></div>' +
+    heroRow([{ k: 'Last one', id: 'nbLast' }, { k: 'Last 24h', id: 'nbDay' }, { k: 'Driving', id: 'nbDrive' }]) +
+  '</section>';
+  h += '<section class="card"><h2>Log one</h2>';
+  h += '<div class="seg" id="offSeg">' + OFFSETS.map(function(o){
+    return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
+  }).join('') + '</div>';
+  h += '<button class="btn" id="nbAdd">Add one</button>';
+  h += '</section>';
+  h += '<section class="card log"><h2>Log</h2>';
+  var ls = nbList().slice().sort(function(a, b){ return b.t - a.t; });
+  if (!ls.length) h += '<div class="empty">Nothing logged.</div>';
+  else h += ls.map(function(d){
+    return '<div class="item"><span class="t">' + fmtTime(new Date(d.t)) + '</span><span class="nm">' + fmtWhen(new Date(d.t)).replace(fmtTime(new Date(d.t)), '').trim() + '</span><span class="sd"></span><button class="x" data-rm="' + esc(d.id) + '" aria-label="Remove">×</button></div>';
+  }).join('');
+  h += '</section>';
+  h += '<section class="card"><h2>Worth knowing</h2><ul>' +
+    '<li>Mixed with drinks it makes a third chemical that is harder on your heart than either one alone.</li>' +
+    '<li>It hides how drunk you are. Trust the BAC on the Track tab, not how you feel.</li>' +
+    '<li>No driving. Queensland roadside tests pick it up for a couple of days.</li>' +
+    '<li>Call 000 for chest pain, trouble breathing, a racing heart that will not settle, overheating or a seizure.</li>' +
+    '<li>Don’t do it alone, and keep a mate who knows.</li>' +
+    '<li>More info: dancesafe.org, tripsit.me</li>' +
+  '</ul></section>';
+  return h;
+}
+
 function renderSettings(){
   var s = state.settings;
   var h = '';
   h += '<section class="card"><h2>You</h2>' +
-    '<div class="field first"><label for="sName">Name</label><input type="text" id="sName" value="' + esc(s.name || '') + '" autocomplete="off"></div>' +
-    '<div class="field"><label for="sAge">Age</label><span class="unit"><input type="number" id="sAge" inputmode="numeric" min="18" max="100" value="' + esc(s.age) + '">yrs</span></div>' +
+    '<div class="field first"><label for="sAge">Age</label><span class="unit"><input type="number" id="sAge" inputmode="numeric" min="18" max="100" value="' + esc(s.age) + '">yrs</span></div>' +
     '<div class="field"><label for="sHeight">Height</label><span class="unit"><input type="number" id="sHeight" inputmode="numeric" min="120" max="230" value="' + esc(s.height) + '">cm</span></div>' +
     '<div class="field"><label for="sWeight">Weight</label><span class="unit"><input type="number" id="sWeight" inputmode="decimal" min="30" max="250" value="' + esc(s.weight) + '">kg</span></div>' +
     '<div class="field"><span class="k">Sex</span><span></span></div>' +
@@ -596,12 +637,13 @@ function renderSettings(){
 
 function render(){
   var s = state.settings;
-  el('who').textContent = (s.name ? s.name + ', ' : '') + (Number(s.weight) || 71) + 'kg';
+  el('who').textContent = (Number(s.weight) || 71) + 'kg';
   var v = el('view');
   if (tab === 'track') v.innerHTML = renderTrack();
   else if (tab === 'drive') v.innerHTML = renderDrive();
   else if (tab === 'tomorrow') v.innerHTML = renderTomorrow();
   else if (tab === 'calories') v.innerHTML = renderCalories();
+  else if (tab === 'nb') v.innerHTML = renderNb();
   else v.innerHTML = renderSettings();
   Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), function(b){
     b.classList.toggle('on', b.getAttribute('data-tab') === tab);
@@ -612,7 +654,7 @@ function render(){
 
 function updateWho(){
   var s = state.settings;
-  el('who').textContent = (s.name ? s.name + ', ' : '') + (Number(s.weight) || 71) + 'kg';
+  el('who').textContent = (Number(s.weight) || 71) + 'kg';
 }
 function numField(id, key, lo, hi){
   var n = el(id);
@@ -643,6 +685,8 @@ function bind(){
   if (wb) wb.addEventListener('click', function(){ logItem('water', 'Water', 0, 0); });
   var fb = el('foodBtn');
   if (fb) fb.addEventListener('click', function(){ logItem('food', 'Food', 0, 0); });
+  var nbAdd = el('nbAdd');
+  if (nbAdd) nbAdd.addEventListener('click', function(){ logItem('nb', 'Nose beer', 0, 0); });
   var cAdd = el('cAdd');
   if (cAdd) cAdd.addEventListener('click', function(){
     var n = (el('cName').value || '').trim() || 'Drink';
@@ -664,8 +708,6 @@ function bind(){
       save(); render();
     });
   });
-  var sName = el('sName');
-  if (sName) sName.addEventListener('input', function(){ state.settings.name = sName.value.trim(); save(); updateWho(); });
   numField('sAge', 'age', 18, 100);
   numField('sHeight', 'height', 120, 230);
   numField('sWeight', 'weight', 30, 250);
@@ -719,7 +761,7 @@ function tick(){
       setHero('hero', nDrinks ? 'rose' : 'lilac');
       set('heroEyebrow', 'Estimated BAC');
       set('heroBig', fmtBac(eff));
-      set('heroSub', nDrinks ? 'No cap. Anything more from now is just borrowing happiness from tomorrow.' : 'No cap set. Pick one in Tomorrow if you want pacing.');
+      set('heroSub', nDrinks ? 'No cap. Your head\u2019s gonna hurt and it\u2019s a full day write off.' : 'No cap set. Pick one in Tomorrow if you want pacing.');
     } else if (nd.never) {
       setHero('hero', 'rose');
       set('heroEyebrow', 'Heads up');
@@ -751,7 +793,9 @@ function tick(){
     setHero('driveHero', d.color);
     set('driveStatus', d.status);
     var limitTxt = d.zero ? 'Your limit is zero.' : 'Your limit is under 0.05.';
-    if (d.status === 'Clear') {
+    if (d.nb) {
+      set('driveSub', 'Something is logged in the other tab. Roadside tests in Queensland pick that up for a couple of days, alcohol aside.');
+    } else if (d.status === 'Clear') {
       set('driveSub', nDrinks ? 'Estimate is back to zero. ' + limitTxt : 'Nothing logged. ' + limitTxt);
     } else {
       set('driveSub', 'Estimated BAC ' + fmtBac(d.bac) + '. ' + limitTxt);
@@ -779,7 +823,7 @@ function tick(){
     var projPeak = Math.max(peak, eff + dose);
     var projTier = TIERS[tierIndex(projPeak, tot + 1, water)];
     set('hgOneMore', 'Peak ' + fmtBac(projPeak) + ', ' + projTier.label.toLowerCase());
-    if (g === null || g === undefined) set('hgGoalNote', 'No cap, so no timer. Anything more from now is just borrowing happiness from tomorrow.');
+    if (g === null || g === undefined) set('hgGoalNote', 'No cap, so no timer. Your head\u2019s gonna hurt and it\u2019s a full day write off.');
     else set('hgGoalNote', 'The timer keeps your peak under ' + fmtGoal(g) + '. Under 0.05 most people wake up fine. Over 0.08 a hangover is likely. Over 0.11 it is near certain.');
     set('hgWaterTip', 'Water. One glass per drink. You are at ' + water + ' of ' + need + '. It does not lower your BAC, it stops the dehydration part.');
     set('hgFoodTip', fedAt(now) ? 'Food. You have eaten recently, so drinks are hitting slower right now. Eat again in a few hours.' : 'Food. A proper meal makes the next two hours of drinks hit slower and softer.');
@@ -801,6 +845,17 @@ function tick(){
     set('calMac', (cal / BIG_MAC).toFixed(1));
   }
 
+  if (tab === 'nb') {
+    var nl = nbList();
+    var day = nbSince(24 * 3.6e6);
+    var lastT = nl.reduce(function(a, x){ return Math.max(a, x.t); }, 0);
+    set('nbBig', String(day));
+    set('nbSub', day === 1 ? 'in the last 24 hours' : 'in the last 24 hours');
+    set('nbLast', lastT ? fmtDur((now - lastT) / 3.6e6) + ' ago' : 'none');
+    set('nbDay', String(day));
+    set('nbDrive', nbRecent() ? 'No' : 'Clear');
+  }
+
   if (tab === 'settings') {
     set('howText', 'One standard drink is 10g of alcohol. At your age, height, weight and sex each one lifts your BAC by about ' + fmtBac(perDrink()) + ' and soaks in over about 30 minutes. Log it when you start it. A proper meal makes the next two hours of drinks soak in slower and takes about a fifth off what reaches your blood. Water changes nothing on the BAC side, it only helps tomorrow. Your body clears about 0.015 an hour. Calories are the alcohol at 7 a gram plus the mixer. Only a breath test knows your real number.');
   }
@@ -813,6 +868,13 @@ Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), functi
     render();
     window.scrollTo(0, 0);
   });
+});
+
+el('brand').addEventListener('click', function(){
+  tab = tab === 'nb' ? 'track' : 'nb';
+  customOpen = false;
+  render();
+  window.scrollTo(0, 0);
 });
 
 render();
