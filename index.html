@@ -189,9 +189,12 @@ var FOOD_MULT = 0.8;
 var CAL_PER_STD = 70;
 var BIG_MAC = 550;
 var PRESETS = [
-  { name: 'Hard Solo', std: 1.3, cal: 100, note: '375ml can, zero sugar' },
+  { name: 'Hard Solo 4.5%', std: 1.3, cal: 100, note: '375ml can, zero sugar' },
   { name: 'Hard Solo 6%', std: 1.8, cal: 130, note: '375ml can' },
   { name: 'Corona', std: 1.3, cal: 150, note: '355ml bottle' },
+  { name: 'Jack and Coke', std: 1.0, cal: 130, note: '30ml nip plus coke' },
+  { name: 'Jack and Coke can', std: 1.4, cal: 220, note: '375ml, 4.8%' },
+  { name: 'Double Jack can', std: 2.0, cal: 240, note: '375ml, 6.9%' },
   { name: 'Vodka water', std: 1.0, cal: 65, note: '30ml nip' },
   { name: 'Gin and dry', std: 1.0, cal: 125, note: '30ml nip plus mixer' },
   { name: 'Tequila shot', std: 1.0, cal: 65, note: '30ml' },
@@ -222,8 +225,9 @@ var resetArmed = 0;
 var toastTimer = null;
 
 function defaults(){
-  return { settings: { name: 'Jordy', age: 34, height: 175, weight: 71, sex: 'male', licence: 'open', goal: 0.05, calLimit: 1000 }, items: [] };
+  return { settings: { name: 'Jordy', age: 34, height: 175, weight: 71, sex: 'male', licence: 'open', goal: 0.05, calLimit: 1000 }, items: [], mine: [] };
 }
+function allDrinks(){ return PRESETS.concat(state && state.mine ? state.mine : []); }
 function presetByName(n){
   for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].name === n) return PRESETS[i];
   return null;
@@ -248,6 +252,7 @@ function load(){
         if (x.type !== 'drink') x.cal = 0;
       });
       d.items = items;
+      d.mine = Array.isArray(s.mine) ? s.mine : [];
       var ok = false;
       for (var k = 0; k < TIERS.length; k++) if (TIERS[k].cap === d.settings.goal) ok = true;
       if (!ok) d.settings.goal = 0.05;
@@ -460,10 +465,10 @@ function renderTrack(){
   h += '<div class="seg" id="offSeg">' + OFFSETS.map(function(o){
     return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
   }).join('') + '</div>';
-  h += '<div class="grid">' + PRESETS.map(function(p, i){
+  h += '<div class="grid">' + allDrinks().map(function(p, i){
     return '<button class="drink" data-i="' + i + '"><span class="n">' + esc(p.name) + '</span><span class="s">' + fmtStd(p.std) + ' std, ' + p.cal + ' cal</span></button>';
   }).join('');
-  h += '<button class="drink custom" id="customBtn"><span class="n">Something else</span><span class="s">Type in the standard drinks</span></button>';
+  h += '<button class="drink custom" id="customBtn"><span class="n">Something else</span><span class="s">Add it once, it stays in the list</span></button>';
   h += '<button class="drink water" id="waterBtn"><span class="n">Water</span><span class="s" id="waterCount"></span></button>';
   h += '<button class="drink food" id="foodBtn"><span class="n">Food</span><span class="s" id="foodCount"></span></button>';
   h += '</div>';
@@ -574,10 +579,20 @@ function renderCalories(){
   return h;
 }
 
+function nbStage(n){
+  var lady = state.settings.sex === 'female';
+  if (n <= 0) return { label: 'Nose beers', sub: '', color: 'lilac' };
+  if (n === 1) return { label: 'Kicking off', sub: '', color: 'lilac' };
+  if (n === 2) return { label: 'Bit of fun', sub: '', color: 'sky' };
+  if (n === 3) return { label: 'Okay, sure, one more', sub: '', color: 'peach' };
+  if (lady) return { label: 'Okay, Griselda Blanco', sub: 'The Godmother herself. Even she’d tell you to slow down.', color: 'rose' };
+  return { label: 'Okay, Pablo Escobar', sub: 'Heart’s doing double time with the drinks. Call it here.', color: 'rose' };
+}
+
 function renderNb(){
   var h = '';
   h += '<section class="hero lilac" id="nbHero">' +
-    '<div class="eyebrow">Nose beers</div>' +
+    '<div class="eyebrow" id="nbStage"></div>' +
     '<div class="big" id="nbBig"></div>' +
     '<div class="sub" id="nbSub"></div>' +
     heroRow([{ k: 'Last one', id: 'nbLast' }, { k: 'Last 24h', id: 'nbDay' }, { k: 'Driving', id: 'nbDrive' }]) +
@@ -596,12 +611,11 @@ function renderNb(){
   }).join('');
   h += '</section>';
   h += '<section class="card"><h2>Worth knowing</h2><ul>' +
-    '<li>Mixed with drinks it makes a third chemical that is harder on your heart than either one alone.</li>' +
-    '<li>It hides how drunk you are. Trust the BAC on the Track tab, not how you feel.</li>' +
-    '<li>No driving. Queensland roadside tests pick it up for a couple of days.</li>' +
-    '<li>Call 000 for chest pain, trouble breathing, a racing heart that will not settle, overheating or a seizure.</li>' +
-    '<li>Don’t do it alone, and keep a mate who knows.</li>' +
-    '<li>More info: dancesafe.org, tripsit.me</li>' +
+    '<li>Your liver mixes it with alcohol and makes a brand new drug called cocaethylene. It only exists when you have both.</li>' +
+    '<li>Cocaethylene hangs around in your blood about three times longer than the original, so the strain on your body keeps going after the buzz is gone.</li>' +
+    '<li>It pushes your heart rate and blood pressure up harder than either one alone. Studies link the combo to a much higher chance of a sudden heart attack, even in fit young people.</li>' +
+    '<li>Even after one, you\u2019ll feel like you\u2019ve had fewer drinks than you really have.</li>' +
+    '<li>It tricks you into feeling sober. Your BAC is exactly the same, you just can\u2019t feel it, so people end up drinking way more than they think.</li>' +
   '</ul></section>';
   return h;
 }
@@ -625,6 +639,12 @@ function renderSettings(){
     '<p class="note" style="margin-bottom:8px">What the usual ones cost you.</p>' +
     exampleRows() +
   '</section>';
+  h += '<section class="card log"><h2>Your drinks</h2>';
+  if (!state.mine.length) h += '<div class="empty">None yet. Use Something else on the Track tab and it saves here.</div>';
+  else h += state.mine.map(function(d, i){
+    return '<div class="item"><span class="nm">' + esc(d.name) + '</span><span class="sd">' + fmtStd(d.std) + ' std, ' + d.cal + ' cal</span><button class="x" data-mine="' + i + '" aria-label="Remove">\u00d7</button></div>';
+  }).join('');
+  h += '</section>';
   h += '<section class="card"><h2>Log</h2>' +
     '<button class="btn danger" id="resetBtn">' + (resetArmed ? 'Tap again to clear everything' : 'Clear today\u2019s log') + '</button>' +
     '<p class="note">Everything saves on this phone only. Nothing leaves it.</p>' +
@@ -675,7 +695,7 @@ function bind(){
   });
   Array.prototype.forEach.call(v.querySelectorAll('.drink[data-i]'), function(b){
     b.addEventListener('click', function(){
-      var p = PRESETS[Number(b.getAttribute('data-i'))];
+      var p = allDrinks()[Number(b.getAttribute('data-i'))];
       logItem('drink', p.name, p.std, p.cal);
     });
   });
@@ -695,6 +715,9 @@ function bind(){
     sd = Math.round(sd * 10) / 10;
     var c = Number(el('cCal').value);
     if (!c || c < 0) c = sd * CAL_PER_STD;
+    c = Math.round(c);
+    var exists = allDrinks().some(function(x){ return x.name.toLowerCase() === n.toLowerCase(); });
+    if (!exists && n !== 'Drink') state.mine.push({ name: n, std: sd, cal: c, note: 'yours' });
     logItem('drink', n, sd, c);
   });
   var cCancel = el('cCancel');
@@ -722,6 +745,12 @@ function bind(){
     b.addEventListener('click', function(){
       state.settings.licence = b.getAttribute('data-lic'); save();
       Array.prototype.forEach.call(v.querySelectorAll('#licSeg button'), function(x){ x.classList.toggle('on', x === b); });
+    });
+  });
+  Array.prototype.forEach.call(v.querySelectorAll('button[data-mine]'), function(b){
+    b.addEventListener('click', function(){
+      state.mine.splice(Number(b.getAttribute('data-mine')), 1);
+      save(); render();
     });
   });
   var rb = el('resetBtn');
@@ -849,9 +878,12 @@ function tick(){
     var nl = nbList();
     var day = nbSince(24 * 3.6e6);
     var lastT = nl.reduce(function(a, x){ return Math.max(a, x.t); }, 0);
+    var st = nbStage(day);
+    setHero('nbHero', st.color);
+    set('nbStage', st.label);
+    set('nbSub', st.sub);
     set('nbBig', String(day));
-    set('nbSub', day === 1 ? 'in the last 24 hours' : 'in the last 24 hours');
-    set('nbLast', lastT ? fmtDur((now - lastT) / 3.6e6) + ' ago' : 'none');
+    set('nbLast', lastT ? fmtCountdown((now - lastT) / 1000) + ' ago' : 'none');
     set('nbDay', String(day));
     set('nbDrive', nbRecent() ? 'No' : 'Clear');
   }
