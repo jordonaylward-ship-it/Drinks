@@ -358,11 +358,9 @@ function driveInfo(now){
   else if (bac >= 0.05) { status = 'No'; color = 'rose'; }
   else if (bac >= 0.03) { status = 'Risky'; color = 'peach'; }
   else { status = 'Under 0.05'; color = 'mint'; }
-  var nb = nbRecent();
-  if (nb) { status = 'No'; color = 'rose'; }
   var hUnder = zero ? bac / BETA : hoursUntil(bac, 0.05);
   var hZero = bac / BETA;
-  return { nb: nb, bac: bac, status: status, color: color, zero: zero, hUnder: hUnder, hZero: hZero,
+  return { bac: bac, status: status, color: color, zero: zero, hUnder: hUnder, hZero: hZero,
     underAt: new Date(now + hUnder * 3.6e6), zeroAt: new Date(now + hZero * 3.6e6) };
 }
 function nextDrink(now){
@@ -382,7 +380,6 @@ function tierIndex(peak, tot, water){
   if (tot >= 10 && i < 2) i = 2;
   if (tot >= 14 && i < 3) i = 3;
   if (dehydrated(tot, water)) i = Math.min(4, i + 1);
-  if (nbSince(24 * 3.6e6)) i = Math.min(4, i + 1);
   return i;
 }
 
@@ -822,9 +819,7 @@ function tick(){
     setHero('driveHero', d.color);
     set('driveStatus', d.status);
     var limitTxt = d.zero ? 'Your limit is zero.' : 'Your limit is under 0.05.';
-    if (d.nb) {
-      set('driveSub', 'Something is logged in the other tab. Roadside tests in Queensland pick that up for a couple of days, alcohol aside.');
-    } else if (d.status === 'Clear') {
+    if (d.status === 'Clear') {
       set('driveSub', nDrinks ? 'Estimate is back to zero. ' + limitTxt : 'Nothing logged. ' + limitTxt);
     } else {
       set('driveSub', 'Estimated BAC ' + fmtBac(d.bac) + '. ' + limitTxt);
