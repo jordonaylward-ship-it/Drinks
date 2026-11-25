@@ -11,6 +11,7 @@
 <title>Drink Limit</title>
 <style>
   *{box-sizing:border-box}
+  [hidden]{display:none!important}
   :root{
     --bg:#F5F7FB; --card:#FFFFFF; --text:#1C1C1E; --muted:#6B7280; --line:#E8EAF1; --tab:rgba(255,255,255,.85);
     --sky:#DCEBFF; --sky-ink:#2A62E8;
@@ -51,45 +52,76 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:16px; line-height:1.35; -webkit-font-smoothing:antialiased;
     padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));
+    overflow-x:hidden;
   }
   .app{max-width:480px;margin:0 auto;padding:10px 16px 20px}
-  .top{display:flex;align-items:baseline;justify-content:space-between;padding:10px 4px 14px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 4px 14px}
   .brand{font-size:28px;font-weight:700;letter-spacing:-.5px;border:0;background:none;color:inherit;font-family:inherit;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .who{color:var(--muted);font-size:14px}
+  .who{display:flex;align-items:center;gap:6px;border:0;background:var(--card);color:var(--muted);font:inherit;font-size:14px;font-weight:500;padding:7px 10px 7px 12px;border-radius:999px;cursor:pointer;box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
+  .who svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .who.on{color:var(--sky-ink)}
 
   .card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
   .card h2{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--muted)}
   .card p{margin:0}
   .card ul{margin:0;padding-left:18px}
   .card li{margin:6px 0}
+  .cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .cardhead h2{margin:0;min-width:0}
 
-  .hero{border-radius:22px;padding:22px 18px 18px;margin-bottom:12px;transition:background .25s}
+  .hero{position:relative;border-radius:22px;padding:22px 18px 18px;margin-bottom:12px;transition:background .25s}
   .hero.mint{background:var(--mint);color:var(--mint-ink)}
   .hero.sky{background:var(--sky);color:var(--sky-ink)}
   .hero.peach{background:var(--peach);color:var(--peach-ink)}
   .hero.rose{background:var(--rose);color:var(--rose-ink)}
   .hero.lilac{background:var(--lilac);color:var(--lilac-ink)}
   .hero .eyebrow{font-size:15px;font-weight:600;opacity:.85}
-  .hero .big{font-size:62px;font-weight:700;letter-spacing:-2px;line-height:1.05;font-variant-numeric:tabular-nums;margin:4px 0 6px}
+  .hero .big{font-size:clamp(40px,16vw,62px);font-weight:700;letter-spacing:-2px;line-height:1.05;font-variant-numeric:tabular-nums;margin:4px 0 6px;white-space:nowrap}
   .hero .big.text{font-size:44px;letter-spacing:-1px}
   .hero .sub{font-size:15px;opacity:.92}
+  .hero .sub2{font-size:14px;margin-top:10px;opacity:.92}
   .hero .row{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,0,0,.08)}
   .hero .stat{flex:1;min-width:0}
   .hero .stat .k{font-size:12px;opacity:.75}
   .hero .stat .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hero .mood{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .hero .mood span{font-size:46px;line-height:1}
+  .hero .mood small{font-size:11px;font-weight:600;opacity:.75}
+  .hero.withmood .eyebrow,.hero.withmood .sub{padding-right:64px}
+  .hero.center .eyebrow,.hero.center .sub{text-align:center}
+  .hero.center .stat{text-align:center}
+  .hero .emoji{font-size:118px;line-height:1.08;text-align:center;margin:8px 0 6px}
   .bar{height:10px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;margin-top:14px}
   .bar i{display:block;height:100%;border-radius:999px;background:currentColor;opacity:.55;width:0;transition:width .3s}
 
+  .banner{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--lilac);color:var(--lilac-ink);border-radius:18px;padding:12px 12px 12px 16px;margin-bottom:12px;font-size:15px;font-weight:500}
+  .banner .pill{background:var(--card);color:var(--lilac-ink)}
+
   .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
   .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 0;font:inherit;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .seg.five button{font-size:12px;padding:9px 0}
   .seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .seg.emo button{font-size:28px;line-height:1.15;padding:6px 0}
+
+  .pill{border:0;background:var(--bg);color:var(--text);font:inherit;font-size:14px;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .pill.on{background:var(--sky);color:var(--sky-ink)}
+
+  .search{position:relative;margin:12px 0 10px}
+  .search svg{position:absolute;left:12px;top:50%;width:18px;height:18px;transform:translateY(-50%);fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;pointer-events:none}
+  .search input{font:inherit;font-size:16px;width:100%;border:0;background:var(--bg);color:var(--text);border-radius:12px;padding:12px 44px 12px 38px;-webkit-appearance:none;appearance:none}
+  .search input::-webkit-search-cancel-button{display:none;-webkit-appearance:none}
+  .search .clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:0;border-radius:50%;background:var(--line);color:var(--muted);font-size:17px;line-height:1;cursor:pointer}
+  .chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 12px;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;border:0;background:var(--bg);color:var(--muted);font:inherit;font-size:14px;font-weight:500;padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--text);color:var(--card)}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .drink{border:0;background:var(--bg);border-radius:14px;padding:14px 12px;text-align:left;font:inherit;color:var(--text);display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:transform .08s}
+  .wide{grid-column:1/-1}
+  .drink{border:0;background:var(--bg);border-radius:14px;padding:12px;text-align:left;font:inherit;color:var(--text);display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:transform .08s;min-width:0}
   .drink:active{transform:scale(.97)}
-  .drink .n{font-size:16px;font-weight:600}
+  .drink .n{font-size:16px;font-weight:600;overflow-wrap:anywhere}
   .drink .s{font-size:13px;color:var(--muted)}
+  .drink .m{font-size:12px;color:var(--muted);opacity:.85}
   .drink.custom{background:var(--lilac);color:var(--lilac-ink)}
   .drink.custom .s{color:inherit;opacity:.8}
   .drink.water{background:var(--sky);color:var(--sky-ink)}
@@ -117,34 +149,50 @@
   .field input{font:inherit;font-size:16px;width:150px;text-align:right;border:0;background:var(--bg);border-radius:10px;padding:9px 12px;color:var(--text)}
   .field .unit{display:flex;align-items:center;gap:8px;color:var(--muted)}
   .field .unit input{width:90px}
-  .ex{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+  .ex{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
   .ex:first-of-type{border-top:0}
   .ex b{color:var(--text);font-weight:500}
+
+  .time{display:block;font:inherit;font-size:32px;font-weight:700;letter-spacing:-.5px;text-align:center;border:0;background:var(--bg);color:var(--text);border-radius:14px;padding:10px 12px;width:100%;min-height:64px;-webkit-appearance:none;appearance:none}
+  .time::-webkit-date-and-time-value{text-align:center}
+  .timerow{display:flex;gap:10px;align-items:stretch}
+  .timerow .time{flex:1;min-width:0}
+  .timerow .pill{font-size:16px;padding:0 20px;border-radius:14px}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;padding:12px;border-radius:14px;cursor:pointer}
+  .opt + .opt{margin-top:4px}
+  .opt .ot{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;min-width:100px}
+  .opt .od{flex:1;color:var(--muted);font-size:14px;min-width:0}
+  .opt.on{background:var(--sky);color:var(--sky-ink)}
+  .opt.on .od{color:inherit;opacity:.85}
+  .badge{font-size:12px;font-weight:700;background:var(--mint);color:var(--mint-ink);padding:4px 9px;border-radius:999px;flex-shrink:0}
 
   .btn{border:0;border-radius:12px;padding:13px 16px;font:inherit;font-size:16px;font-weight:600;background:var(--text);color:var(--card);width:100%;cursor:pointer}
   .btn.ghost{background:var(--bg);color:var(--text)}
   .btn.danger{background:var(--rose);color:var(--rose-ink)}
   .note{color:var(--muted);font-size:14px;margin:10px 0 0}
-  .empty{color:var(--muted);font-size:15px;padding:6px 0}
+  .empty{color:var(--muted);font-size:15px;padding:6px 0;margin:0}
 
-  .tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--tab);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(10px + env(safe-area-inset-bottom,0px))}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;background:var(--tab);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
   .tabbar .inner{display:flex;width:100%;max-width:480px}
   .tabbar button{flex:1;border:0;background:transparent;font:inherit;font-size:11px;font-weight:500;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer}
   .tabbar button.on{color:var(--sky-ink)}
   .tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));background:var(--text);color:var(--card);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));background:var(--text);color:var(--card);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;z-index:20}
   .toast.show{opacity:1}
+  .snack{position:fixed;left:50%;transform:translateX(-50%) translateY(8px);bottom:calc(96px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:14px;background:var(--text);color:var(--card);padding:7px 7px 7px 16px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100vw - 32px);white-space:nowrap;z-index:21}
+  .snack.show{opacity:1;pointer-events:auto;transform:translateX(-50%)}
+  .snack button{border:0;background:var(--card);color:var(--text);font:inherit;font-size:14px;font-weight:700;padding:8px 16px;border-radius:999px;cursor:pointer}
 
   button:focus-visible,input:focus-visible{outline:2px solid var(--sky-ink);outline-offset:2px}
-  @media (prefers-reduced-motion:reduce){.toast,.hero,.drink,.bar i{transition:none}.drink:active{transform:none}}
+  @media (prefers-reduced-motion:reduce){.toast,.snack,.hero,.drink,.bar i{transition:none}.drink:active{transform:none}}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
     <button class="brand" id="brand" aria-label="Drink Limit">Drink Limit</button>
-    <div class="who" id="who"></div>
+    <button class="who" id="whoBtn" aria-label="Settings"><span id="who"></span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
   <main id="view"></main>
 </div>
@@ -167,14 +215,15 @@
       <svg viewBox="0 0 24 24"><path d="M12 3.5c.6 2.6 3.8 4.4 3.8 8.3a3.8 3.8 0 0 1-7.6 0c0-1.3.5-2.3 1.2-3.1.2 1.1.8 1.8 1.6 2.2-.3-2.7.1-5 1-7.4z"/><path d="M12 20.5v-2"/></svg>
       Calories
     </button>
-    <button data-tab="settings">
-      <svg viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
-      Settings
+    <button data-tab="sleep">
+      <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      Sleep
     </button>
   </div>
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="snack" id="snack" role="status" aria-live="polite"><span id="snackText"></span><button id="snackUndo">Undo</button></div>
 
 <script>
 (function(){
@@ -188,27 +237,113 @@ var FOOD_WINDOW = 2 * 3.6e6;
 var FOOD_MULT = 0.8;
 var CAL_PER_STD = 70;
 var BIG_MAC = 550;
-var PRESETS = [
-  { name: 'Hard Solo 4.5%', std: 1.3, cal: 100, note: '375ml can, zero sugar' },
-  { name: 'Hard Solo 6%', std: 1.8, cal: 130, note: '375ml can' },
-  { name: 'Corona', std: 1.3, cal: 150, note: '355ml bottle' },
-  { name: 'Jack and Coke', std: 1.0, cal: 130, note: '30ml nip plus coke' },
-  { name: 'Jack and Coke can', std: 1.4, cal: 220, note: '375ml, 4.8%' },
-  { name: 'Double Jack can', std: 2.0, cal: 240, note: '375ml, 6.9%' },
-  { name: 'Vodka water', std: 1.0, cal: 65, note: '30ml nip' },
-  { name: 'Gin and dry', std: 1.0, cal: 125, note: '30ml nip plus mixer' },
-  { name: 'Tequila shot', std: 1.0, cal: 65, note: '30ml' },
-  { name: 'Wet cat shot', std: 0.7, cal: 70, note: 'mixed shot, varies' },
-  { name: 'Double spirit', std: 2.0, cal: 130, note: '60ml, add 70 for a sugary mixer' },
-  { name: 'Cocktail', std: 1.5, cal: 220, note: 'club pour' },
-  { name: 'Beer can', std: 1.3, cal: 145, note: '375ml full strength' }
+var CYCLE_MIN = 90;
+var FALL_ASLEEP_MIN = 15;
+var OLD_NIGHT_H = 10;
+
+var CATS = [
+  { id: 'usual', label: 'Usual' },
+  { id: 'az', label: 'A to Z' },
+  { id: 'beer', label: 'Beer' },
+  { id: 'cider', label: 'Cider' },
+  { id: 'premix', label: 'Premix' },
+  { id: 'spirits', label: 'Spirits' },
+  { id: 'shots', label: 'Shots' },
+  { id: 'wine', label: 'Wine' },
+  { id: 'sake', label: 'Sake' },
+  { id: 'cocktails', label: 'Cocktails' },
+  { id: 'yours', label: 'Yours' }
 ];
+
+function D(name, cat, std, cal, note, k){ return { name: name, cat: cat, std: std, cal: cal, note: note || '', k: k || '' }; }
+
+var DRINKS = [
+  D('Asahi Super Dry', 'beer', 1.3, 130, '330ml bottle, 5%', 'japanese lager'),
+  D('Beer can', 'beer', 1.4, 150, '375ml full strength, 4.8%', 'full strength stubby tinny lager'),
+  D('Carlton Draught', 'beer', 1.4, 140, '375ml can, 4.6%', 'lager'),
+  D('Coopers Pale Ale', 'beer', 1.3, 145, '375ml, 4.5%', 'pale'),
+  D('Corona', 'beer', 1.3, 150, '355ml bottle, 4.5%', 'mexican lager'),
+  D('Great Northern Original', 'beer', 1.2, 125, '375ml can, 4.2%', 'gn lager'),
+  D('Great Northern Super Crisp', 'beer', 1.0, 95, '375ml can, 3.5%', 'gn mid strength lager'),
+  D('Heineken', 'beer', 1.3, 140, '330ml bottle, 5%', 'lager'),
+  D('Light beer can', 'beer', 0.8, 90, '375ml, 2.7%', 'low strength'),
+  D('Peroni', 'beer', 1.3, 140, '330ml bottle, 5%', 'nastro azzurro italian lager'),
+  D('Pint, full strength', 'beer', 2.2, 230, '570ml, 4.8%', 'tap'),
+  D('Pot, full strength', 'beer', 1.1, 115, '285ml glass, 4.8%', 'middy tap'),
+  D('Schooner, full strength', 'beer', 1.6, 170, '425ml glass, 4.8%', 'tap'),
+  D('Schooner, mid strength', 'beer', 1.2, 130, '425ml glass, 3.5%', 'tap'),
+  D('Stone & Wood Pacific Ale', 'beer', 1.3, 145, '375ml can, 4.4%', 'stone and wood pacific'),
+  D('VB', 'beer', 1.4, 150, '375ml can, 4.9%', 'victoria bitter'),
+  D('XXXX Bitter', 'beer', 1.3, 135, '375ml can, 4.4%', 'fourex 4x'),
+  D('XXXX Gold', 'beer', 1.0, 110, '375ml can, 3.5%', 'fourex 4x mid strength'),
+
+  D('Cider pint', 'cider', 2.2, 260, '570ml, 5%', 'apple tap'),
+  D('Somersby Apple', 'cider', 1.2, 160, '330ml bottle, 4.5%', 'apple'),
+  D('Strongbow Original', 'cider', 1.4, 160, '355ml bottle, 5%', 'apple'),
+
+  D('Bundy Rum and Cola', 'premix', 1.3, 210, '375ml can, 4.6%', 'bundaberg coke'),
+  D('Canadian Club and Dry', 'premix', 1.4, 210, '375ml can, 4.8%', 'cc whisky dry ginger'),
+  D('Canadian Club Premium', 'premix', 1.8, 240, '375ml can, 6%', 'cc whisky dry ginger strong'),
+  D('Double Jack can', 'premix', 2.0, 240, '375ml can, 6.9%', 'jack daniels jd coke cola strong'),
+  D('Hard Solo 4.5%', 'premix', 1.3, 100, '375ml can, zero sugar', 'hard rated lemon squash'),
+  D('Hard Solo 6%', 'premix', 1.8, 130, '375ml can', 'hard rated lemon squash strong'),
+  D('Jack and Coke can', 'premix', 1.4, 220, '375ml can, 4.8%', 'jack daniels jd cola'),
+  D('Jim Beam and Cola', 'premix', 1.4, 220, '375ml can, 4.8%', 'beam bourbon coke'),
+  D('Jim Beam Double Serve', 'premix', 2.0, 260, '375ml can, 6.7%', 'beam bourbon coke strong'),
+  D('Premix can 5%', 'premix', 1.5, 200, '375ml, any brand', 'rtd'),
+  D('Premix can 7%', 'premix', 2.1, 250, '375ml, any brand', 'rtd strong'),
+  D('Vodka Cruiser', 'premix', 1.0, 190, '275ml bottle, 4.6%', 'cruiser'),
+
+  D('Bourbon and coke', 'spirits', 1.0, 130, '30ml nip plus coke', 'cola jim beam'),
+  D('Double spirit', 'spirits', 2.0, 130, '60ml, add 70 for a sugary mixer', 'double free pour'),
+  D('Gin and dry', 'spirits', 1.0, 125, '30ml nip plus mixer', 'dry ginger'),
+  D('Gin and tonic', 'spirits', 1.0, 120, '30ml nip plus tonic', 'gnt'),
+  D('Jack and Coke', 'spirits', 1.0, 130, '30ml nip plus coke', 'jack daniels jd whiskey cola'),
+  D('Rum and coke', 'spirits', 1.0, 130, '30ml nip plus coke', 'bundy cola'),
+  D('Vodka Red Bull', 'spirits', 1.0, 175, '30ml nip plus a can', 'redbull energy'),
+  D('Vodka soda', 'spirits', 1.0, 65, '30ml nip plus soda', 'lime'),
+  D('Vodka water', 'spirits', 1.0, 65, '30ml nip', ''),
+  D('Whisky neat', 'spirits', 1.0, 65, '30ml nip', 'scotch rocks'),
+
+  D('Fireball shot', 'shots', 0.8, 90, '30ml, 33%', 'cinnamon whisky'),
+  D('Jäger shot', 'shots', 0.8, 80, '30ml, 35%', 'jagermeister'),
+  D('Jägerbomb', 'shots', 0.8, 135, '30ml Jäger plus Red Bull', 'jagermeister bomb redbull'),
+  D('Sambuca shot', 'shots', 0.9, 100, '30ml, 38%', 'aniseed'),
+  D('Tequila shot', 'shots', 1.0, 65, '30ml, 40%', ''),
+  D('Vodka shot', 'shots', 1.0, 65, '30ml, 40%', ''),
+  D('Wet cat shot', 'shots', 0.7, 70, 'mixed shot, varies', ''),
+
+  D('Port', 'wine', 0.9, 90, '60ml, 17.5%', 'fortified'),
+  D('Red wine bottle', 'wine', 8.0, 640, '750ml, 13.5%', 'red'),
+  D('Red wine glass', 'wine', 1.6, 125, '150ml, 13.5%', 'red shiraz cab merlot pinot'),
+  D('Rosé glass', 'wine', 1.4, 115, '150ml, 12%', 'rose pink'),
+  D('Sparkling glass', 'wine', 1.4, 110, '150ml, 12%', 'champagne prosecco bubbles champers'),
+  D('White wine bottle', 'wine', 6.8, 560, '750ml, 11.5%', 'white'),
+  D('White wine glass', 'wine', 1.4, 115, '150ml, 11.5%', 'white sav blanc chardonnay pinot grigio'),
+
+  D('Sake cup', 'sake', 0.5, 60, '45ml cup, 15%', 'nihonshu'),
+  D('Sake flask', 'sake', 2.1, 240, '180ml, 15%', 'tokkuri carafe'),
+  D('Sake flask, genshu', 'sake', 2.6, 290, '180ml, 18.5%', 'strong undiluted'),
+
+  D('Aperol spritz', 'cocktails', 1.3, 180, 'Aperol and prosecco', 'spritz'),
+  D('Cocktail', 'cocktails', 1.5, 220, 'any other, club pour', ''),
+  D('Espresso martini', 'cocktails', 1.7, 230, 'vodka and coffee liqueur', 'coffee'),
+  D('Long Island iced tea', 'cocktails', 2.4, 300, 'five spirits', 'long island'),
+  D('Margarita', 'cocktails', 2.1, 250, 'tequila and triple sec', 'marg'),
+  D('Mojito', 'cocktails', 1.4, 220, 'rum, mint and lime', 'rum'),
+  D('Negroni', 'cocktails', 1.9, 200, 'gin, Campari, vermouth', 'gin'),
+  D('Old fashioned', 'cocktails', 1.9, 170, '60ml bourbon', 'whisky bourbon'),
+  D('Piña colada', 'cocktails', 1.4, 300, 'rum, coconut, pineapple', 'pina colada rum')
+];
+
+var STARTERS = ['Hard Solo 4.5%', 'Hard Solo 6%', 'Corona', 'Jack and Coke', 'Jack and Coke can', 'Double Jack can', 'Vodka water', 'Gin and dry', 'Tequila shot', 'Wet cat shot', 'Double spirit', 'Cocktail', 'Beer can'];
+
 var TIERS = [
-  { label: 'Fresh', color: 'mint', cap: 0.05, text: 'You should wake up fine.' },
-  { label: 'Fine', color: 'sky', cap: 0.065, text: 'Maybe a bit slow in the morning. Nothing a coffee will not fix.' },
-  { label: 'Bit rough', color: 'lilac', cap: 0.08, text: 'A bit dusty tomorrow. Water and food fix most of it.' },
-  { label: 'Rough', color: 'peach', cap: 0.11, text: 'Tomorrow morning will hurt.' },
-  { label: 'Write off', color: 'rose', cap: null, text: 'Your head\u2019s gonna hurt and it\u2019s a full day write off.' }
+  { label: 'Fresh', emoji: '😎', color: 'mint', cap: 0.05, text: 'You should wake up fine.' },
+  { label: 'Fine', emoji: '🙂', color: 'sky', cap: 0.065, text: 'Maybe a bit slow in the morning. Nothing a coffee will not fix.' },
+  { label: 'Bit rough', emoji: '😕', color: 'lilac', cap: 0.08, text: 'A bit dusty tomorrow. Water and food fix most of it.' },
+  { label: 'Rough', emoji: '🤢', color: 'peach', cap: 0.11, text: 'Tomorrow morning will hurt.' },
+  { label: 'Write off', emoji: '💀', color: 'rose', cap: null, text: 'Your head’s gonna hurt and it’s a full day write off.' }
 ];
 var OFFSETS = [
   { m: 0, label: 'Now' },
@@ -216,28 +351,41 @@ var OFFSETS = [
   { m: 30, label: '30m ago' },
   { m: 60, label: '1h ago' }
 ];
+var NUMS = { age: [18, 100], height: [120, 230], weight: [30, 250], calLimit: [0, 10000] };
 
 var state = load();
 var tab = 'track';
 var offsetMin = 0;
 var customOpen = false;
-var resetArmed = 0;
+var customName = '';
+var query = '';
+var cat = 'usual';
 var toastTimer = null;
+var snackTimer = null;
+var undoItems = null;
 
-function defaults(){
-  return { settings: { name: 'Jordy', age: 34, height: 175, weight: 71, sex: 'male', licence: 'open', goal: 0.05, calLimit: 1000 }, items: [], mine: [] };
+function norm(s){
+  s = String(s || '').toLowerCase();
+  try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) {}
+  return s.replace(/&/g, ' and ').replace(/\s+/g, ' ').trim();
 }
-function allDrinks(){ return PRESETS.concat(state && state.mine ? state.mine : []); }
+function defaults(){
+  return {
+    settings: { name: 'Jordy', age: 34, height: 175, weight: 71, sex: 'male', licence: 'open', goal: 0.05, calLimit: 1000 },
+    items: [], mine: [], usage: {},
+    sleep: { mode: 'wake', wake: '06:30', bed: '', pick: 0 }
+  };
+}
 function presetByName(n){
-  for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].name === n) return PRESETS[i];
+  for (var i = 0; i < DRINKS.length; i++) if (DRINKS[i].name === n) return DRINKS[i];
   return null;
 }
 function load(){
+  var d = defaults();
   try {
     var raw = localStorage.getItem(KEY);
     if (raw) {
       var s = JSON.parse(raw);
-      var d = defaults();
       d.settings = Object.assign(d.settings, s.settings || {});
       var items = Array.isArray(s.items) ? s.items : [];
       if (!items.length) {
@@ -252,14 +400,18 @@ function load(){
         if (x.type !== 'drink') x.cal = 0;
       });
       d.items = items;
-      d.mine = Array.isArray(s.mine) ? s.mine : [];
+      var names = {};
+      DRINKS.forEach(function(x){ names[norm(x.name)] = 1; });
+      d.mine = (Array.isArray(s.mine) ? s.mine : []).filter(function(m){ return m && m.name && !names[norm(m.name)]; });
+      if (s.usage && typeof s.usage === 'object') d.usage = s.usage;
+      else items.forEach(function(x){ if (x.type === 'drink') d.usage[x.name] = (d.usage[x.name] || 0) + 1; });
+      d.sleep = Object.assign(d.sleep, s.sleep || {});
       var ok = false;
       for (var k = 0; k < TIERS.length; k++) if (TIERS[k].cap === d.settings.goal) ok = true;
       if (!ok) d.settings.goal = 0.05;
-      return d;
     }
   } catch (e) {}
-  return defaults();
+  return d;
 }
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
@@ -280,6 +432,8 @@ function foodCount(){ return state.items.filter(function(x){ return x.type === '
 function nbList(){ return state.items.filter(function(x){ return x.type === 'nb'; }); }
 function nbSince(ms){ var now = Date.now(); return nbList().filter(function(x){ return now - x.t <= ms; }).length; }
 function nbRecent(){ return nbSince(48 * 3.6e6) > 0; }
+function lastItemT(){ return state.items.reduce(function(a, x){ return Math.max(a, x.t); }, 0); }
+function lastDrinkT(){ return drinksList().reduce(function(a, x){ return Math.max(a, x.t); }, 0); }
 function fedAt(t){
   var items = state.items;
   for (var i = 0; i < items.length; i++) {
@@ -382,6 +536,10 @@ function tierIndex(peak, tot, water){
   if (dehydrated(tot, water)) i = Math.min(4, i + 1);
   return i;
 }
+function goalIndex(){
+  for (var i = 0; i < TIERS.length; i++) if (TIERS[i].cap === state.settings.goal) return i;
+  return 0;
+}
 
 function fmtBac(b){ return b.toFixed(3); }
 function fmtTime(d){
@@ -412,20 +570,124 @@ function fmtCountdown(sec){
 function fmtGoal(g){ return g.toFixed(g === 0.065 ? 3 : 2); }
 function fmtStd(n){ return (Math.round(n * 10) / 10).toFixed(1); }
 function fmtNum(n){ return Math.round(n).toLocaleString('en-AU'); }
+function fmtHrs(h){ return (h % 1 ? h.toFixed(1) : String(h)) + (h === 1 ? ' hour' : ' hours'); }
+function hhmm(d){ var h = d.getHours(), m = d.getMinutes(); return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; }
 
 function toast(msg){
   var t = el('toast');
+  el('snack').classList.remove('show');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
 }
+function snack(msg){
+  el('toast').classList.remove('show');
+  el('snackText').textContent = msg;
+  el('snack').classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(function(){ el('snack').classList.remove('show'); undoItems = null; }, 6000);
+}
+
+/* drinks list */
+function catLabel(id){
+  for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i].label;
+  return '';
+}
+function allDrinks(){
+  var names = {};
+  DRINKS.forEach(function(d){ names[norm(d.name)] = 1; });
+  var mine = (state.mine || []).filter(function(m){ return m && m.name && !names[norm(m.name)]; }).map(function(m){
+    return { name: m.name, cat: 'yours', std: Number(m.std) || 0, cal: Number(m.cal) || 0, note: 'Saved by you', k: '' };
+  });
+  return DRINKS.concat(mine);
+}
+function byName(n){
+  var all = allDrinks();
+  for (var i = 0; i < all.length; i++) if (all[i].name === n) return all[i];
+  var nn = norm(n);
+  for (var j = 0; j < all.length; j++) if (norm(all[j].name) === nn) return all[j];
+  return null;
+}
+function sortAZ(list){
+  return list.slice().sort(function(a, b){ return a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true }); });
+}
+function usualDrinks(){
+  var all = allDrinks();
+  var score = {};
+  STARTERS.forEach(function(n, i){ score[n] = 0.001 * (STARTERS.length - i); });
+  all.forEach(function(d){ if (d.cat === 'yours') score[d.name] = (score[d.name] || 0) + 0.5; });
+  var u = state.usage || {};
+  Object.keys(u).forEach(function(n){ score[n] = (score[n] || 0) + (Number(u[n]) || 0); });
+  var pool = all.filter(function(d){ return score[d.name] !== undefined; });
+  pool.sort(function(a, b){ return score[b.name] - score[a.name]; });
+  return sortAZ(pool.slice(0, 14));
+}
+function drinksIn(c){
+  if (c === 'usual') return usualDrinks();
+  if (c === 'az') return sortAZ(allDrinks());
+  return sortAZ(allDrinks().filter(function(d){ return d.cat === c; }));
+}
+function searchDrinks(q){
+  var nq = norm(q);
+  if (!nq) return [];
+  var words = nq.split(' ');
+  var res = [];
+  allDrinks().forEach(function(d){
+    var nn = norm(d.name);
+    var hay = nn + ' ' + norm(d.k) + ' ' + norm(catLabel(d.cat)) + ' ' + norm(d.note);
+    for (var i = 0; i < words.length; i++) if (hay.indexOf(words[i]) < 0) return;
+    var r = nn.indexOf(nq) === 0 ? 0 : (' ' + nn).indexOf(' ' + nq) >= 0 ? 1 : nn.indexOf(nq) >= 0 ? 2 : 3;
+    res.push({ d: d, r: r });
+  });
+  res.sort(function(a, b){ return a.r - b.r || a.d.name.localeCompare(b.d.name, 'en', { sensitivity: 'base', numeric: true }); });
+  return res.map(function(x){ return x.d; });
+}
+function drinkTile(d){
+  return '<button class="drink" data-drink="' + esc(d.name) + '"><span class="n">' + esc(d.name) + '</span>' +
+    '<span class="s">' + fmtStd(d.std) + ' std, ' + Math.round(d.cal) + ' cal</span>' +
+    (d.note ? '<span class="m">' + esc(d.note) + '</span>' : '') + '</button>';
+}
+function gridHtml(){
+  var q = query.trim();
+  var h = '';
+  if (q) {
+    var res = searchDrinks(q);
+    if (!res.length) h += '<p class="empty wide">No match for “' + esc(q) + '”. Add it below.</p>';
+    h += res.map(drinkTile).join('');
+    h += '<button class="drink custom" data-act="custom" data-name="' + esc(q) + '"><span class="n">' + (res.length ? 'Something else' : 'Add “' + esc(q) + '”') + '</span><span class="s">Add it once, it stays in the list</span></button>';
+    return h;
+  }
+  var list = drinksIn(cat);
+  if (!list.length) h += '<p class="empty wide">None yet. Add one with Something else.</p>';
+  h += list.map(drinkTile).join('');
+  h += '<button class="drink custom" data-act="custom"><span class="n">Something else</span><span class="s">Add it once, it stays in the list</span></button>';
+  if (cat === 'cocktails') h += '<p class="note wide">Bar pours vary, these are typical.</p>';
+  return h;
+}
+function chipsHtml(){
+  var hasMine = allDrinks().some(function(d){ return d.cat === 'yours'; });
+  if (cat === 'yours' && !hasMine) cat = 'usual';
+  return CATS.filter(function(c){ return c.id !== 'yours' || hasMine; }).map(function(c){
+    return '<button class="chip' + (!query.trim() && c.id === cat ? ' on' : '') + '" data-cat="' + c.id + '">' + c.label + '</button>';
+  }).join('');
+}
+function updateDrinkArea(){
+  var g = el('drinkGrid'); if (g) g.innerHTML = gridHtml();
+  var c = el('chips'); if (c) c.innerHTML = chipsHtml();
+  var x = el('clearQ'); if (x) x.hidden = !query;
+}
 
 function logItem(type, name, std, cal){
   var t = Date.now() - offsetMin * 60000;
   state.items.push({ id: t + Math.random().toString(36).slice(2, 7), t: t, type: type, name: name, std: Number(std) || 0, cal: type === 'drink' ? Math.round(Number(cal) || 0) : 0 });
+  if (type === 'drink') {
+    state.usage[name] = (Number(state.usage[name]) || 0) + 1;
+    query = '';
+  }
   offsetMin = 0;
   customOpen = false;
+  customName = '';
   save();
   render();
   if (type === 'nb') toast('Logged');
@@ -437,21 +699,117 @@ function removeItem(id){
   save();
   render();
 }
+function addCustom(){
+  var n = (el('cName').value || '').trim() || 'Drink';
+  var sd = Number(el('cStd').value);
+  if (!sd || sd <= 0) { el('cStd').focus(); toast('Put in the standard drinks'); return; }
+  sd = Math.round(sd * 10) / 10;
+  var c = Number(el('cCal').value);
+  if (!c || c < 0) c = sd * CAL_PER_STD;
+  c = Math.round(c);
+  var found = byName(n);
+  if (!found && n !== 'Drink') state.mine.push({ name: n, std: sd, cal: c, note: 'yours' });
+  logItem('drink', found ? found.name : n, sd, c);
+}
+function startNewNight(){
+  if (!state.items.length) { toast('Already a fresh start'); return; }
+  undoItems = state.items.slice();
+  state.items = [];
+  offsetMin = 0;
+  save();
+  tab = tab === 'settings' ? 'settings' : 'track';
+  render();
+  snack('New night started');
+}
+function undoNewNight(){
+  if (!undoItems) return;
+  state.items = undoItems.concat(state.items);
+  undoItems = null;
+  save();
+  el('snack').classList.remove('show');
+  render();
+  toast('Log is back');
+}
+function oldNight(){ var t = lastItemT(); return t > 0 && Date.now() - t > OLD_NIGHT_H * 3.6e6; }
+function oldNightText(){
+  var h = (Date.now() - lastItemT()) / 3.6e6;
+  var ago = h < 48 ? Math.round(h) + ' hours ago' : Math.round(h / 24) + ' days ago';
+  return 'Last log was ' + ago + '.';
+}
 
+/* sleep */
+function atTime(v, base){
+  var p = String(v || '').split(':');
+  var d = new Date(base);
+  d.setHours(Number(p[0]) || 0, Number(p[1]) || 0, 0, 0);
+  return d;
+}
+function nextAt(v, now){
+  var d = atTime(v, now);
+  if (d.getTime() <= now) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+function nearAt(v, now){
+  var d = atTime(v, now);
+  if (d.getTime() < now - 3.6e6) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+function sleepPlan(now){
+  var s = state.sleep;
+  var mode = s.mode === 'bed' ? 'bed' : 'wake';
+  var opts = [];
+  var W = null, B = null;
+  var span = function(c){ return (c * CYCLE_MIN + FALL_ASLEEP_MIN) * 60000; };
+  if (mode === 'wake') {
+    W = nextAt(s.wake || '06:30', now);
+    [6, 5, 4, 3, 2, 1].forEach(function(c){
+      var bed = W - span(c);
+      if (bed >= now - 60000) opts.push({ c: c, bed: bed, wake: W });
+    });
+    opts = opts.slice(0, 4).sort(function(a, b){ return a.bed - b.bed; });
+  } else {
+    B = s.bed ? nearAt(s.bed, now) : now;
+    [3, 4, 5, 6].forEach(function(c){ opts.push({ c: c, bed: B, wake: B + span(c) }); });
+  }
+  var rec = null, sel = null;
+  opts.forEach(function(o){ if (o.c === 5) rec = o; });
+  if (!rec && opts.length) rec = opts.reduce(function(a, o){ return o.c > a.c ? o : a; });
+  opts.forEach(function(o){ if (o.c === Number(s.pick)) sel = o; });
+  return { mode: mode, opts: opts, rec: rec, sel: sel || rec, W: W, B: B };
+}
+function cyclesTxt(c){ return c + ' cycle' + (c === 1 ? '' : 's') + ', ' + fmtHrs(c * 1.5) + ' sleep'; }
+function optRow(o, plan){
+  var main = plan.mode === 'wake' ? o.bed : o.wake;
+  return '<button class="opt' + (o === plan.sel ? ' on' : '') + '" data-spick="' + o.c + '">' +
+    '<span class="ot">' + fmtTime(new Date(main)) + '</span>' +
+    '<span class="od">' + o.c + ' cycle' + (o.c === 1 ? '' : 's') + ', ' + fmtHrs(o.c * 1.5) + '</span>' +
+    (o === plan.rec ? '<span class="badge">Best</span>' : '') + '</button>';
+}
+
+/* views */
 function heroRow(stats){
   return '<div class="row">' + stats.map(function(s){
     return '<div class="stat"><div class="k">' + s.k + '</div><div class="v" id="' + s.id + '"></div></div>';
   }).join('') + '</div>';
 }
+function offsetSeg(){
+  return '<div class="seg">' + OFFSETS.map(function(o){
+    return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
+  }).join('') + '</div>';
+}
 function exampleRows(){
-  return PRESETS.map(function(p){
-    return '<div class="ex"><b>' + esc(p.name) + '</b><span>' + p.cal + ' cal</span></div>';
+  return usualDrinks().slice(0, 8).map(function(p){
+    return '<div class="ex"><b>' + esc(p.name) + '</b><span>' + Math.round(p.cal) + ' cal</span></div>';
   }).join('');
 }
 
 function renderTrack(){
   var h = '';
-  h += '<section class="hero mint" id="hero">' +
+  if (oldNight()) {
+    h += '<section class="banner"><span>' + esc(oldNightText()) + '</span><button class="pill" data-act="newnight">Start new night</button></section>';
+  }
+  h += '<section class="hero mint withmood" id="hero" data-x="withmood">' +
+    '<div class="mood"><span id="heroMood" role="img"></span><small>Tomorrow</small></div>' +
     '<div class="eyebrow" id="heroEyebrow"></div>' +
     '<div class="big" id="heroBig"></div>' +
     '<div class="sub" id="heroSub"></div>' +
@@ -459,36 +817,37 @@ function renderTrack(){
   '</section>';
 
   h += '<section class="card"><h2>Log a drink</h2>';
-  h += '<div class="seg" id="offSeg">' + OFFSETS.map(function(o){
-    return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
-  }).join('') + '</div>';
-  h += '<div class="grid">' + allDrinks().map(function(p, i){
-    return '<button class="drink" data-i="' + i + '"><span class="n">' + esc(p.name) + '</span><span class="s">' + fmtStd(p.std) + ' std, ' + p.cal + ' cal</span></button>';
-  }).join('');
-  h += '<button class="drink custom" id="customBtn"><span class="n">Something else</span><span class="s">Add it once, it stays in the list</span></button>';
-  h += '<button class="drink water" id="waterBtn"><span class="n">Water</span><span class="s" id="waterCount"></span></button>';
-  h += '<button class="drink food" id="foodBtn"><span class="n">Food</span><span class="s" id="foodCount"></span></button>';
-  h += '</div>';
+  h += offsetSeg();
+  h += '<div class="grid">' +
+    '<button class="drink water" data-act="water"><span class="n">Water</span><span class="s" id="waterCount"></span></button>' +
+    '<button class="drink food" data-act="food"><span class="n">Food</span><span class="s" id="foodCount"></span></button>' +
+  '</div>';
+  h += '<div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+    '<input type="search" id="drinkSearch" placeholder="Search drinks" value="' + esc(query) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search drinks">' +
+    '<button class="clear" id="clearQ" data-act="clearq" aria-label="Clear search"' + (query ? '' : ' hidden') + '>×</button></div>';
+  h += '<div class="chips" id="chips">' + chipsHtml() + '</div>';
+  h += '<div class="grid" id="drinkGrid">' + gridHtml() + '</div>';
   if (customOpen) {
     h += '<div class="inline">' +
-      '<input type="text" id="cName" placeholder="What is it" autocomplete="off">' +
+      '<input type="text" id="cName" placeholder="What is it" autocomplete="off" value="' + esc(customName) + '">' +
       '<input type="number" id="cStd" inputmode="decimal" step="0.1" min="0.1" placeholder="Standard drinks, printed on the can">' +
       '<input type="number" id="cCal" inputmode="numeric" step="1" min="0" placeholder="Calories if you know them, optional">' +
-      '<div class="pair"><button class="btn ghost" id="cCancel">Cancel</button><button class="btn" id="cAdd">Add it</button></div>' +
+      '<div class="pair"><button class="btn ghost" data-act="ccancel">Cancel</button><button class="btn" data-act="cadd">Add it</button></div>' +
     '</div>';
   }
-  h += '<p class="note">Free pours at a mate\u2019s place are usually doubles. Log them as a double. Food is a proper meal, not a handful of chips.</p>';
+  h += '<p class="note">Free pours at a mate’s place are usually doubles. Log them as a double. Food is a proper meal, not a handful of chips.</p>';
   h += '</section>';
 
-  h += '<section class="card log"><h2 id="logHead">Today</h2>';
   var shown = state.items.filter(function(x){ return x.type !== 'nb'; });
+  h += '<section class="card log"><div class="cardhead"><h2 id="logHead">Today</h2>' +
+    (state.items.length ? '<button class="pill" data-act="newnight">Start new night</button>' : '') + '</div>';
   if (!shown.length) {
     h += '<div class="empty">Nothing logged yet. Tap a drink above when you have one.</div>';
   } else {
     var sorted = shown.slice().sort(function(a, b){ return b.t - a.t; });
     h += sorted.map(function(d){
       var sd = d.type === 'drink' ? fmtStd(d.std) : '';
-      return '<div class="item"><span class="t">' + fmtTime(new Date(d.t)) + '</span><span class="nm">' + esc(d.name) + '</span><span class="sd">' + sd + '</span><button class="x" data-rm="' + esc(d.id) + '" aria-label="Remove">\u00d7</button></div>';
+      return '<div class="item"><span class="t">' + fmtTime(new Date(d.t)) + '</span><span class="nm">' + esc(d.name) + '</span><span class="sd">' + sd + '</span><button class="x" data-rm="' + esc(d.id) + '" aria-label="Remove">×</button></div>';
     }).join('');
   }
   h += '</section>';
@@ -522,15 +881,15 @@ function renderDrive(){
 function renderTomorrow(){
   var g = state.settings.goal;
   var h = '';
-  h += '<section class="hero mint" id="hgHero">' +
+  h += '<section class="hero mint center" id="hgHero" data-x="center">' +
     '<div class="eyebrow">Tomorrow morning</div>' +
-    '<div class="big text" id="hgTier"></div>' +
+    '<div class="emoji" id="hgEmoji" role="img"></div>' +
     '<div class="sub" id="hgText"></div>' +
     heroRow([{ k: 'Peak BAC', id: 'hgPeak' }, { k: 'Drinks', id: 'hgTotal' }, { k: 'Water', id: 'hgWater' }]) +
   '</section>';
   h += '<section class="card"><h2>How you want to wake up</h2>';
-  h += '<div class="seg five" id="goalSeg">' + TIERS.map(function(o, i){
-    return '<button data-g="' + i + '"' + (o.cap === g ? ' class="on"' : '') + '>' + o.label + '</button>';
+  h += '<div class="seg emo" id="goalSeg">' + TIERS.map(function(o, i){
+    return '<button data-g="' + i + '"' + (o.cap === g ? ' class="on"' : '') + ' aria-label="' + o.label + '" title="' + o.label + '">' + o.emoji + '</button>';
   }).join('') + '</div>';
   h += '<div class="field first"><span class="k">Next drink</span><span class="v strong" id="hgNext"></span></div>';
   h += '<div class="field"><span class="k">One more now</span><span class="v" id="hgOneMore"></span></div>';
@@ -564,7 +923,7 @@ function renderCalories(){
     }).join('');
   }
   h += '</section>';
-  h += '<section class="card"><h2>What drinks cost</h2>' + exampleRows() +
+  h += '<section class="card"><h2>What your usual ones cost</h2>' + exampleRows() +
     '<p class="note">Alcohol is 7 calories a gram, so every standard drink is about 70 before the mixer. Soda water adds nothing. Coke, dry, tonic or juice add 50 to 100. A cocktail can be 200 to 400.</p>' +
   '</section>';
   h += '<section class="card"><h2>Cheap swaps</h2><ul>' +
@@ -572,6 +931,35 @@ function renderCalories(){
     '<li>Hard Solo is zero sugar now, so it is about the same as a nip.</li>' +
     '<li>One cocktail is three vodka sodas.</li>' +
     '<li>Every water in between is a drink you did not have.</li>' +
+  '</ul></section>';
+  return h;
+}
+
+function renderSleep(){
+  var s = state.sleep;
+  var wake = s.mode !== 'bed';
+  var h = '';
+  h += '<section class="hero sky" id="slHero">' +
+    '<div class="eyebrow" id="slEyebrow"></div>' +
+    '<div class="big" id="slBig"></div>' +
+    '<div class="sub" id="slSub"></div>' +
+    '<div class="sub2" id="slAlc" hidden></div>' +
+  '</section>';
+  h += '<section class="card">' +
+    '<div class="seg"><button data-smode="wake"' + (wake ? ' class="on"' : '') + '>Wake up at</button><button data-smode="bed"' + (!wake ? ' class="on"' : '') + '>Going to bed at</button></div>';
+  if (wake) {
+    h += '<input class="time" type="time" id="slTime" value="' + esc(s.wake || '06:30') + '" aria-label="Wake up time">';
+  } else {
+    h += '<div class="timerow"><input class="time" type="time" id="slTime" value="' + esc(s.bed || hhmm(new Date())) + '" aria-label="Bed time">' +
+      '<button class="pill' + (s.bed ? '' : ' on') + '" id="slNow" data-act="slnow">Now</button></div>';
+  }
+  h += '</section>';
+  h += '<section class="card"><h2 id="slListHead"></h2><div id="slList"></div></section>';
+  h += '<section class="card"><h2>How it works</h2><ul>' +
+    '<li>One sleep cycle is about 90 minutes.</li>' +
+    '<li>Most people take 10 to 20 minutes to fall asleep, so it adds 15.</li>' +
+    '<li>Waking at the end of a cycle means less groggy.</li>' +
+    '<li>Adults need 7 to 9 hours. That’s 5 or 6 cycles.</li>' +
   '</ul></section>';
   return h;
 }
@@ -595,10 +983,8 @@ function renderNb(){
     heroRow([{ k: 'Last one', id: 'nbLast' }, { k: 'Last 24h', id: 'nbDay' }, { k: 'Driving', id: 'nbDrive' }]) +
   '</section>';
   h += '<section class="card"><h2>Log one</h2>';
-  h += '<div class="seg" id="offSeg">' + OFFSETS.map(function(o){
-    return '<button data-off="' + o.m + '"' + (o.m === offsetMin ? ' class="on"' : '') + '>' + o.label + '</button>';
-  }).join('') + '</div>';
-  h += '<button class="btn" id="nbAdd">Add one</button>';
+  h += offsetSeg();
+  h += '<button class="btn" data-act="nbadd">Add one</button>';
   h += '</section>';
   h += '<section class="card log"><h2>Log</h2>';
   var ls = nbList().slice().sort(function(a, b){ return b.t - a.t; });
@@ -611,8 +997,8 @@ function renderNb(){
     '<li>Your liver mixes it with alcohol and makes a brand new drug called cocaethylene. It only exists when you have both.</li>' +
     '<li>Cocaethylene hangs around in your blood about three times longer than the original, so the strain on your body keeps going after the buzz is gone.</li>' +
     '<li>It pushes your heart rate and blood pressure up harder than either one alone. Studies link the combo to a much higher chance of a sudden heart attack, even in fit young people.</li>' +
-    '<li>Even after one, you\u2019ll feel like you\u2019ve had fewer drinks than you really have.</li>' +
-    '<li>It tricks you into feeling sober. Your BAC is exactly the same, you just can\u2019t feel it, so people end up drinking way more than they think.</li>' +
+    '<li>Even after one, you’ll feel like you’ve had fewer drinks than you really have.</li>' +
+    '<li>It tricks you into feeling sober. Your BAC is exactly the same, you just can’t feel it, so people end up drinking way more than they think.</li>' +
   '</ul></section>';
   return h;
 }
@@ -621,30 +1007,30 @@ function renderSettings(){
   var s = state.settings;
   var h = '';
   h += '<section class="card"><h2>You</h2>' +
-    '<div class="field first"><label for="sAge">Age</label><span class="unit"><input type="number" id="sAge" inputmode="numeric" min="18" max="100" value="' + esc(s.age) + '">yrs</span></div>' +
-    '<div class="field"><label for="sHeight">Height</label><span class="unit"><input type="number" id="sHeight" inputmode="numeric" min="120" max="230" value="' + esc(s.height) + '">cm</span></div>' +
-    '<div class="field"><label for="sWeight">Weight</label><span class="unit"><input type="number" id="sWeight" inputmode="decimal" min="30" max="250" value="' + esc(s.weight) + '">kg</span></div>' +
+    '<div class="field first"><label for="sAge">Age</label><span class="unit"><input type="number" id="sAge" data-num="age" inputmode="numeric" min="18" max="100" value="' + esc(s.age) + '">yrs</span></div>' +
+    '<div class="field"><label for="sHeight">Height</label><span class="unit"><input type="number" id="sHeight" data-num="height" inputmode="numeric" min="120" max="230" value="' + esc(s.height) + '">cm</span></div>' +
+    '<div class="field"><label for="sWeight">Weight</label><span class="unit"><input type="number" id="sWeight" data-num="weight" inputmode="decimal" min="30" max="250" value="' + esc(s.weight) + '">kg</span></div>' +
     '<div class="field"><span class="k">Sex</span><span></span></div>' +
-    '<div class="seg" id="sexSeg"><button data-sex="male"' + (s.sex === 'male' ? ' class="on"' : '') + '>Male</button><button data-sex="female"' + (s.sex === 'female' ? ' class="on"' : '') + '>Female</button></div>' +
+    '<div class="seg"><button data-sex="male"' + (s.sex === 'male' ? ' class="on"' : '') + '>Male</button><button data-sex="female"' + (s.sex === 'female' ? ' class="on"' : '') + '>Female</button></div>' +
   '</section>';
   h += '<section class="card"><h2>Licence</h2>' +
-    '<div class="seg" id="licSeg"><button data-lic="open"' + (s.licence === 'open' ? ' class="on"' : '') + '>Open, under 0.05</button><button data-lic="zero"' + (s.licence !== 'open' ? ' class="on"' : '') + '>Zero limit</button></div>' +
+    '<div class="seg"><button data-lic="open"' + (s.licence === 'open' ? ' class="on"' : '') + '>Open, under 0.05</button><button data-lic="zero"' + (s.licence !== 'open' ? ' class="on"' : '') + '>Zero limit</button></div>' +
     '<p class="note">Zero limit covers L, P1, P2, probationary, restricted and interlock licences in Queensland.</p>' +
   '</section>';
   h += '<section class="card"><h2>Calories for the night</h2>' +
-    '<div class="field first"><label for="sCal">Limit</label><span class="unit"><input type="number" id="sCal" inputmode="numeric" min="0" max="10000" step="50" value="' + esc(s.calLimit) + '">cal</span></div>' +
-    '<p class="note" style="margin-bottom:8px">What the usual ones cost you.</p>' +
+    '<div class="field first"><label for="sCal">Limit</label><span class="unit"><input type="number" id="sCal" data-num="calLimit" inputmode="numeric" min="0" max="10000" step="50" value="' + esc(s.calLimit) + '">cal</span></div>' +
+    '<p class="note" style="margin-bottom:8px">What your usual ones cost.</p>' +
     exampleRows() +
   '</section>';
   h += '<section class="card log"><h2>Your drinks</h2>';
   if (!state.mine.length) h += '<div class="empty">None yet. Use Something else on the Track tab and it saves here.</div>';
-  else h += state.mine.map(function(d, i){
-    return '<div class="item"><span class="nm">' + esc(d.name) + '</span><span class="sd">' + fmtStd(d.std) + ' std, ' + d.cal + ' cal</span><button class="x" data-mine="' + i + '" aria-label="Remove">\u00d7</button></div>';
+  else h += state.mine.map(function(d){
+    return '<div class="item"><span class="nm">' + esc(d.name) + '</span><span class="sd">' + fmtStd(d.std) + ' std, ' + d.cal + ' cal</span><button class="x" data-mine="' + esc(d.name) + '" aria-label="Remove">×</button></div>';
   }).join('');
   h += '</section>';
   h += '<section class="card"><h2>Log</h2>' +
-    '<button class="btn danger" id="resetBtn">' + (resetArmed ? 'Tap again to clear everything' : 'Clear today\u2019s log') + '</button>' +
-    '<p class="note">Everything saves on this phone only. Nothing leaves it.</p>' +
+    '<button class="btn danger" data-act="newnight">Start new night</button>' +
+    '<p class="note">Clears the log. Your settings and saved drinks stay. Everything saves on this phone only.</p>' +
   '</section>';
   h += '<section class="card"><h2>How this works</h2>' +
     '<p class="note" style="margin-top:0" id="howText"></p>' +
@@ -652,119 +1038,107 @@ function renderSettings(){
   return h;
 }
 
+function updateWho(){
+  el('who').textContent = (Number(state.settings.weight) || 71) + 'kg';
+}
 function render(){
-  var s = state.settings;
-  el('who').textContent = (Number(s.weight) || 71) + 'kg';
+  updateWho();
   var v = el('view');
   if (tab === 'track') v.innerHTML = renderTrack();
   else if (tab === 'drive') v.innerHTML = renderDrive();
   else if (tab === 'tomorrow') v.innerHTML = renderTomorrow();
   else if (tab === 'calories') v.innerHTML = renderCalories();
+  else if (tab === 'sleep') v.innerHTML = renderSleep();
   else if (tab === 'nb') v.innerHTML = renderNb();
   else v.innerHTML = renderSettings();
   Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), function(b){
     b.classList.toggle('on', b.getAttribute('data-tab') === tab);
   });
-  bind();
+  el('whoBtn').classList.toggle('on', tab === 'settings');
   tick();
 }
-
-function updateWho(){
-  var s = state.settings;
-  el('who').textContent = (Number(s.weight) || 71) + 'kg';
-}
-function numField(id, key, lo, hi){
-  var n = el(id);
-  if (!n) return;
-  n.addEventListener('input', function(){
-    var v = Number(n.value);
-    if (v >= lo && v <= hi) { state.settings[key] = v; save(); updateWho(); tick(); }
-  });
+function go(t){
+  tab = t;
+  customOpen = false;
+  render();
+  window.scrollTo(0, 0);
 }
 
-function bind(){
-  var v = el('view');
-  Array.prototype.forEach.call(v.querySelectorAll('#offSeg button'), function(b){
-    b.addEventListener('click', function(){
-      offsetMin = Number(b.getAttribute('data-off'));
-      Array.prototype.forEach.call(v.querySelectorAll('#offSeg button'), function(x){ x.classList.toggle('on', x === b); });
-    });
-  });
-  Array.prototype.forEach.call(v.querySelectorAll('.drink[data-i]'), function(b){
-    b.addEventListener('click', function(){
-      var p = allDrinks()[Number(b.getAttribute('data-i'))];
-      logItem('drink', p.name, p.std, p.cal);
-    });
-  });
-  var cb = el('customBtn');
-  if (cb) cb.addEventListener('click', function(){ customOpen = !customOpen; render(); if (customOpen && el('cName')) el('cName').focus(); });
-  var wb = el('waterBtn');
-  if (wb) wb.addEventListener('click', function(){ logItem('water', 'Water', 0, 0); });
-  var fb = el('foodBtn');
-  if (fb) fb.addEventListener('click', function(){ logItem('food', 'Food', 0, 0); });
-  var nbAdd = el('nbAdd');
-  if (nbAdd) nbAdd.addEventListener('click', function(){ logItem('nb', 'Nose beer', 0, 0); });
-  var cAdd = el('cAdd');
-  if (cAdd) cAdd.addEventListener('click', function(){
-    var n = (el('cName').value || '').trim() || 'Drink';
-    var sd = Number(el('cStd').value);
-    if (!sd || sd <= 0) { el('cStd').focus(); toast('Put in the standard drinks'); return; }
-    sd = Math.round(sd * 10) / 10;
-    var c = Number(el('cCal').value);
-    if (!c || c < 0) c = sd * CAL_PER_STD;
-    c = Math.round(c);
-    var exists = allDrinks().some(function(x){ return x.name.toLowerCase() === n.toLowerCase(); });
-    if (!exists && n !== 'Drink') state.mine.push({ name: n, std: sd, cal: c, note: 'yours' });
-    logItem('drink', n, sd, c);
-  });
-  var cCancel = el('cCancel');
-  if (cCancel) cCancel.addEventListener('click', function(){ customOpen = false; render(); });
-  Array.prototype.forEach.call(v.querySelectorAll('button[data-rm]'), function(b){
-    b.addEventListener('click', function(){ removeItem(b.getAttribute('data-rm')); });
-  });
-  Array.prototype.forEach.call(v.querySelectorAll('#goalSeg button'), function(b){
-    b.addEventListener('click', function(){
-      state.settings.goal = TIERS[Number(b.getAttribute('data-g'))].cap;
-      save(); render();
-    });
-  });
-  numField('sAge', 'age', 18, 100);
-  numField('sHeight', 'height', 120, 230);
-  numField('sWeight', 'weight', 30, 250);
-  numField('sCal', 'calLimit', 0, 10000);
-  Array.prototype.forEach.call(v.querySelectorAll('#sexSeg button'), function(b){
-    b.addEventListener('click', function(){
-      state.settings.sex = b.getAttribute('data-sex'); save(); tick();
-      Array.prototype.forEach.call(v.querySelectorAll('#sexSeg button'), function(x){ x.classList.toggle('on', x === b); });
-    });
-  });
-  Array.prototype.forEach.call(v.querySelectorAll('#licSeg button'), function(b){
-    b.addEventListener('click', function(){
-      state.settings.licence = b.getAttribute('data-lic'); save();
-      Array.prototype.forEach.call(v.querySelectorAll('#licSeg button'), function(x){ x.classList.toggle('on', x === b); });
-    });
-  });
-  Array.prototype.forEach.call(v.querySelectorAll('button[data-mine]'), function(b){
-    b.addEventListener('click', function(){
-      state.mine.splice(Number(b.getAttribute('data-mine')), 1);
-      save(); render();
-    });
-  });
-  var rb = el('resetBtn');
-  if (rb) rb.addEventListener('click', function(){
-    if (resetArmed) {
-      state.items = []; resetArmed = 0; save(); render(); toast('Log cleared');
-    } else {
-      resetArmed = 1; rb.textContent = 'Tap again to clear everything';
-      setTimeout(function(){ resetArmed = 0; var r = el('resetBtn'); if (r) r.textContent = 'Clear today\u2019s log'; }, 3000);
-    }
-  });
+function segOn(b){
+  Array.prototype.forEach.call(b.parentNode.children, function(x){ x.classList.toggle('on', x === b); });
+}
+function setSleepTime(v){
+  if (!/^\d{1,2}:\d{2}/.test(v || '')) return;
+  v = v.slice(0, 5);
+  if (state.sleep.mode === 'bed') state.sleep.bed = v; else state.sleep.wake = v;
+  state.sleep.pick = 0;
+  save();
+  var n = el('slNow'); if (n) n.classList.toggle('on', state.sleep.mode === 'bed' && !state.sleep.bed);
+  tick();
+}
+function onClick(e){
+  var b = e.target.closest ? e.target.closest('button') : null;
+  if (!b) return;
+  var a;
+  if ((a = b.getAttribute('data-off')) !== null) { offsetMin = Number(a); segOn(b); return; }
+  if ((a = b.getAttribute('data-drink')) !== null) { var d = byName(a); if (d) logItem('drink', d.name, d.std, d.cal); return; }
+  if ((a = b.getAttribute('data-cat')) !== null) {
+    cat = a; query = '';
+    var s = el('drinkSearch'); if (s) s.value = '';
+    updateDrinkArea();
+    return;
+  }
+  if ((a = b.getAttribute('data-rm')) !== null) { removeItem(a); return; }
+  if ((a = b.getAttribute('data-g')) !== null) { state.settings.goal = TIERS[Number(a)].cap; save(); render(); return; }
+  if ((a = b.getAttribute('data-sex')) !== null) { state.settings.sex = a; save(); segOn(b); tick(); return; }
+  if ((a = b.getAttribute('data-lic')) !== null) { state.settings.licence = a; save(); segOn(b); return; }
+  if ((a = b.getAttribute('data-mine')) !== null) {
+    state.mine = state.mine.filter(function(m){ return m.name !== a; });
+    save(); render();
+    return;
+  }
+  if ((a = b.getAttribute('data-smode')) !== null) { state.sleep.mode = a; state.sleep.pick = 0; save(); render(); return; }
+  if ((a = b.getAttribute('data-spick')) !== null) { state.sleep.pick = Number(a); save(); tick(); return; }
+  switch (b.getAttribute('data-act')) {
+    case 'water': logItem('water', 'Water', 0, 0); break;
+    case 'food': logItem('food', 'Food', 0, 0); break;
+    case 'custom':
+      var pre = b.getAttribute('data-name');
+      customOpen = pre !== null ? true : !customOpen;
+      customName = pre || '';
+      render();
+      var f = el(customName ? 'cStd' : 'cName');
+      if (customOpen && f) f.focus();
+      break;
+    case 'cadd': addCustom(); break;
+    case 'ccancel': customOpen = false; customName = ''; render(); break;
+    case 'clearq':
+      query = '';
+      var si = el('drinkSearch'); if (si) { si.value = ''; si.focus(); }
+      updateDrinkArea();
+      break;
+    case 'newnight': startNewNight(); break;
+    case 'nbadd': logItem('nb', 'Nose beer', 0, 0); break;
+    case 'slnow': state.sleep.bed = ''; state.sleep.pick = 0; save(); render(); break;
+  }
+}
+function onInput(e){
+  var t = e.target;
+  if (t.id === 'drinkSearch') { query = t.value; updateDrinkArea(); return; }
+  var k = t.getAttribute && t.getAttribute('data-num');
+  if (k && NUMS[k]) {
+    var v = Number(t.value);
+    if (v >= NUMS[k][0] && v <= NUMS[k][1]) { state.settings[k] = v; save(); updateWho(); tick(); }
+    return;
+  }
+  if (t.id === 'slTime') setSleepTime(t.value);
 }
 
 function setHero(id, color){
   var n = el(id);
   if (!n) return;
-  var want = 'hero ' + color;
+  var x = n.getAttribute('data-x');
+  var want = 'hero ' + color + (x ? ' ' + x : '');
   if (n.className !== want) n.className = want;
 }
 
@@ -779,6 +1153,7 @@ function tick(){
   var g = state.settings.goal;
   var nDrinks = drinksList().length;
   var cal = totalCal();
+  var mood = nDrinks ? TIERS[tierIndex(peak, tot, water)] : TIERS[0];
 
   if (tab === 'track') {
     var nd = nextDrink(now);
@@ -787,7 +1162,7 @@ function tick(){
       setHero('hero', nDrinks ? 'rose' : 'lilac');
       set('heroEyebrow', 'Estimated BAC');
       set('heroBig', fmtBac(eff));
-      set('heroSub', nDrinks ? 'No cap. Your head\u2019s gonna hurt and it\u2019s a full day write off.' : 'No cap set. Pick one in Tomorrow if you want pacing.');
+      set('heroSub', nDrinks ? 'No cap. Your head’s gonna hurt and it’s a full day write off.' : 'No cap set. Pick one in Tomorrow if you want pacing.');
     } else if (nd.never) {
       setHero('hero', 'rose');
       set('heroEyebrow', 'Heads up');
@@ -806,6 +1181,8 @@ function tick(){
     }
     var bigEl = el('heroBig');
     if (bigEl) bigEl.classList.toggle('text', nd !== null && !nd.never && nd.ok);
+    set('heroMood', mood.emoji);
+    var hm = el('heroMood'); if (hm) hm.setAttribute('aria-label', 'Tomorrow: ' + mood.label);
     set('heroBac', fmtBac(eff));
     set('heroTotal', fmtStd(tot) + ' std');
     set('heroDrive', di.status);
@@ -829,12 +1206,11 @@ function tick(){
   }
 
   if (tab === 'tomorrow') {
-    var ti = tierIndex(peak, tot, water);
-    var tr = TIERS[ti];
     var dry = dehydrated(tot, water);
-    setHero('hgHero', tr.color);
-    set('hgTier', nDrinks ? tr.label : 'Fresh');
-    set('hgText', nDrinks ? tr.text + (dry ? ' You are behind on water.' : '') : 'Nothing logged yet.');
+    setHero('hgHero', mood.color);
+    set('hgEmoji', mood.emoji);
+    var he = el('hgEmoji'); if (he) he.setAttribute('aria-label', mood.label);
+    set('hgText', nDrinks ? mood.text + (dry ? ' You are behind on water.' : '') : 'Nothing logged yet.');
     set('hgPeak', fmtBac(peak));
     set('hgTotal', fmtStd(tot) + ' std');
     var need = Math.ceil(tot);
@@ -846,9 +1222,9 @@ function tick(){
     else set('hgNext', fmtCountdown(nd2.sec) + ', about ' + fmtTime(nd2.at));
     var projPeak = Math.max(peak, eff + dose);
     var projTier = TIERS[tierIndex(projPeak, tot + 1, water)];
-    set('hgOneMore', 'Peak ' + fmtBac(projPeak) + ', ' + projTier.label.toLowerCase());
-    if (g === null || g === undefined) set('hgGoalNote', 'No cap, so no timer. Your head\u2019s gonna hurt and it\u2019s a full day write off.');
-    else set('hgGoalNote', 'The timer keeps your peak under ' + fmtGoal(g) + '. Under 0.05 most people wake up fine. Over 0.08 a hangover is likely. Over 0.11 it is near certain.');
+    set('hgOneMore', 'Peak ' + fmtBac(projPeak) + '  ' + projTier.emoji);
+    if (g === null || g === undefined) set('hgGoalNote', 'No cap, so no timer. Your head’s gonna hurt and it’s a full day write off.');
+    else set('hgGoalNote', 'The timer keeps you at ' + TIERS[goalIndex()].emoji + ' or better. Under 0.05 most people wake up fine. Over 0.08 a hangover is likely. Over 0.11 it is near certain.');
     set('hgWaterTip', 'Water. One glass per drink. You are at ' + water + ' of ' + need + '. It does not lower your BAC, it stops the dehydration part.');
     set('hgFoodTip', fedAt(now) ? 'Food. You have eaten recently, so drinks are hitting slower right now. Eat again in a few hours.' : 'Food. A proper meal makes the next two hours of drinks hit slower and softer.');
   }
@@ -867,6 +1243,48 @@ function tick(){
     set('calLimit', lim ? fmtNum(lim) : 'none');
     set('calLeft', lim ? fmtNum(Math.max(0, left)) : '');
     set('calMac', (cal / BIG_MAC).toFixed(1));
+  }
+
+  if (tab === 'sleep') {
+    var plan = sleepPlan(now);
+    var sel = plan.sel;
+    if (plan.mode === 'wake') {
+      set('slListHead', 'Bedtimes for a ' + fmtTime(new Date(plan.W)) + ' wake up');
+      if (!sel) {
+        setHero('slHero', 'rose');
+        set('slEyebrow', 'Up at ' + fmtTime(new Date(plan.W)));
+        set('slBig', 'Too late');
+        set('slSub', 'Less than one full cycle left before you need to be up.');
+      } else {
+        setHero('slHero', sel.c >= 5 ? 'sky' : sel.c >= 4 ? 'lilac' : 'peach');
+        set('slEyebrow', 'Lights out at');
+        set('slBig', fmtTime(new Date(sel.bed)));
+        var inMs = sel.bed - now;
+        set('slSub', cyclesTxt(sel.c) + '. ' + (inMs > 60000 ? 'That’s in ' + fmtDur(inMs / 3.6e6) + '.' : 'That’s now.'));
+      }
+    } else {
+      set('slListHead', 'Wake up times');
+      setHero('slHero', sel.c >= 5 ? 'sky' : sel.c >= 4 ? 'lilac' : 'peach');
+      set('slEyebrow', 'Set your alarm for');
+      set('slBig', fmtTime(new Date(sel.wake)));
+      set('slSub', cyclesTxt(sel.c) + (state.sleep.bed ? ', in bed at ' + fmtTime(new Date(plan.B)) + '.' : ', if you hit the pillow now.'));
+      if (!state.sleep.bed) {
+        var ti = el('slTime');
+        if (ti && document.activeElement !== ti) { var hv = hhmm(new Date(now)); if (ti.value !== hv) ti.value = hv; }
+      }
+    }
+    var lh = plan.opts.map(function(o){ return optRow(o, plan); }).join('') || '<div class="empty">No full cycles fit before then.</div>';
+    var list = el('slList');
+    if (list && list.getAttribute('data-h') !== lh) { list.innerHTML = lh; list.setAttribute('data-h', lh); }
+    var alc = '';
+    if (sel && nDrinks) {
+      var sb = simulate(sel.bed);
+      var bb = sb.bac + sb.pending;
+      if (bb > 0.005) alc = 'You’ll still be about ' + fmtBac(bb) + ' at bedtime. Alcohol breaks up your sleep cycles, so expect lighter sleep.';
+      else if (sel.bed - lastDrinkT() < 4 * 3.6e6) alc = 'Last drink is within 4 hours of bed. That still breaks up your sleep cycles.';
+    }
+    set('slAlc', alc);
+    var ae = el('slAlc'); if (ae) ae.hidden = !alc;
   }
 
   if (tab === 'nb') {
@@ -888,21 +1306,19 @@ function tick(){
   }
 }
 
+var view = el('view');
+view.addEventListener('click', onClick);
+view.addEventListener('input', onInput);
+view.addEventListener('change', function(e){ if (e.target.id === 'slTime') setSleepTime(e.target.value); });
+view.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && e.target.id === 'drinkSearch') { e.preventDefault(); e.target.blur(); }
+});
 Array.prototype.forEach.call(document.querySelectorAll('.tabbar button'), function(b){
-  b.addEventListener('click', function(){
-    tab = b.getAttribute('data-tab');
-    customOpen = false;
-    render();
-    window.scrollTo(0, 0);
-  });
+  b.addEventListener('click', function(){ go(b.getAttribute('data-tab')); });
 });
-
-el('brand').addEventListener('click', function(){
-  tab = tab === 'nb' ? 'track' : 'nb';
-  customOpen = false;
-  render();
-  window.scrollTo(0, 0);
-});
+el('whoBtn').addEventListener('click', function(){ go(tab === 'settings' ? 'track' : 'settings'); });
+el('brand').addEventListener('click', function(){ go(tab === 'nb' ? 'track' : 'nb'); });
+el('snackUndo').addEventListener('click', undoNewNight);
 
 render();
 setInterval(tick, 1000);
